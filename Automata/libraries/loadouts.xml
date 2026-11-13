@@ -1,0 +1,244 @@
+<?xml version='1.0' encoding='utf-8'?>
+<loadouts>
+  <loadout id="nyto_auto_loadout_osaka" macro="ship_ter_l_destroyer_01_a_macro">
+    <macros>
+      <engine macro="engine_ter_l_allround_01_mk1_macro" path="../con_engine_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_13"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_12"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_11"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_10"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_09"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_08"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_02"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_l_03"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_01"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_02"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_l_02"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_l_01"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_07"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_10"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_09"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_08"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_07"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_05"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_04"/>
+      <engine macro="engine_ter_l_allround_01_mk1_macro" path="../con_engine_02"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_05"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_04"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_03"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_02"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_02"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_14"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_15"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_16"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_01"/>
+    </macros>
+    <virtualmacros>
+      <thruster macro="thruster_gen_l_allround_01_mk3_macro"/>
+    </virtualmacros>
+    <software>
+      <software ware="software_flightassistmk1"/>
+      <software ware="software_scannerlongrangemk2"/>
+      <software ware="software_scannerobjectmk2"/>
+      <software ware="software_targetmk1"/>
+      <software ware="software_trademk1"/>
+    </software>
+  </loadout>
+  <loadout id="nyto_auto_loadout_osaka_travel" macro="ship_ter_l_destroyer_01_a_macro">
+    <macros>
+      <engine macro="engine_ter_l_travel_01_mk1_macro" path="../con_engine_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_13"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_12"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_11"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_10"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_09"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_08"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_02"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_l_03"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_01"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_02"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_l_02"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_l_01"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_07"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_10"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_09"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_08"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_07"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_05"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_04"/>
+      <engine macro="engine_ter_l_travel_01_mk1_macro" path="../con_engine_02"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_05"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_04"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_03"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_02"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_02"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_14"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_15"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_16"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_01"/>
+    </macros>
+    <virtualmacros>
+      <thruster macro="thruster_gen_l_allround_01_mk3_macro"/>
+    </virtualmacros>
+    <software>
+      <software ware="software_flightassistmk1"/>
+      <software ware="software_scannerlongrangemk2"/>
+      <software ware="software_scannerobjectmk2"/>
+      <software ware="software_targetmk1"/>
+      <software ware="software_trademk1"/>
+    </software>
+  </loadout>
+  <loadout id="nyto_auto_loadout_syn" macro="ship_atf_l_destroyer_01_a_macro">
+    <macros>
+      <engine macro="engine_ter_l_allround_01_mk1_macro" path="../con_engine_01"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_13"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_08"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_02"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_l_03"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_01"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_02"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_l_02"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_14"/>
+      <shield macro="shield_ter_l_standard_01_mk3_macro" path="../con_shieldgen_l_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_16"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_15"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_03"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_02"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_12"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_10"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_09"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_11"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_03"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_l_04"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_08"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_07"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_05"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_l_05"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_l_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_04"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_02"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_01"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_l_07"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_l_08"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_17"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_18"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_19"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_20"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_l_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_21"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_22"/>
+    </macros>
+    <virtualmacros>
+      <thruster macro="thruster_gen_l_allround_01_mk3_macro"/>
+    </virtualmacros>
+    <software>
+      <software ware="software_flightassistmk1"/>
+      <software ware="software_scannerlongrangemk2"/>
+      <software ware="software_scannerobjectmk2"/>
+      <software ware="software_targetmk1"/>
+      <software ware="software_trademk1"/>
+    </software>
+  </loadout>
+  <loadout id="nyto_auto_loadout_asgard" macro="ship_atf_xl_battleship_01_a_macro">
+    <macros>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_16"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_15"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_05"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_14"/>
+      <shield macro="shield_ter_xl_standard_01_mk2_macro" path="../con_shieldgen_xl_01"/>
+      <engine macro="engine_ter_xl_allround_01_mk1_macro" path="../con_engine_01"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_04"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_13"/>
+      <shield macro="shield_ter_xl_standard_01_mk2_macro" path="../con_shieldgen_xl_02"/>
+      <shield macro="shield_ter_xl_standard_01_mk2_macro" path="../con_shieldgen_xl_03"/>
+      <shield macro="shield_ter_xl_standard_01_mk2_macro" path="../con_shieldgen_xl_04"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_12"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_11"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_10"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_02"/>
+      <turret macro="turret_ter_m_gatling_02_mk1_macro" path="../con_turret_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_09"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_08"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_large_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_07"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_05"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_large_02"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_large_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_04"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_03"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_02"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_large_04"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_17"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_18"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_19"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_large_05"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_large_06"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_20"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_large_07"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_21"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_22"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_23"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_large_08"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_24"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_25"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_26"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_27"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_large_09"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_large_10"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_28"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_large_11"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_large_12"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_29"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_30"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_31"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_32"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_33"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_34"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_large_13"/>
+      <turret macro="turret_ter_l_gatling_01_mk1_macro" path="../con_turret_large_14"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_35"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_36"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_37"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_38"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_large_15"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_39"/>
+      <turret macro="turret_ter_l_beam_01_mk1_macro" path="../con_turret_large_16"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_40"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_large_01"/>
+      <weapon macro="weapon_ter_l_destroyer_01_mk1_macro" path="../con_weapon_large_02"/>
+      <weapon macro="weapon_atf_xl_battleship_01_mk1_macro" path="../con_weapon_extralarge_01"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_41"/>
+      <shield macro="shield_ter_m_standard_01_mk2_macro" path="../con_shieldgen_42"/>
+    </macros>
+    <virtualmacros>
+      <thruster macro="thruster_gen_xl_allround_01_mk3_macro"/>
+    </virtualmacros>
+    <software>
+      <software ware="software_flightassistmk1"/>
+      <software ware="software_scannerlongrangemk2"/>
+      <software ware="software_scannerobjectmk2"/>
+      <software ware="software_targetmk1"/>
+      <software ware="software_trademk1"/>
+    </software>
+  </loadout>
+</loadouts>

@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Diplomacy">
+  <cues>
+    <cue name="Tick" instantiate="true">
+      <conditions>
+        <event_cue_signalled cue="md.Nyto_Automata_State.Pulse"/>
+      </conditions>
+      <actions>
+        <do_if value="global.$nyto_automata.$schema == 2 and player.age ge global.$nyto_automata.$last_diplomacy + 30s">
+          <run_actions ref="Sync"/>
+        </do_if>
+      </actions>
+    </cue>
+    <library name="Sync" purpose="run_actions">
+      <params/>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$schema != 2">
+          <return/>
+        </do_if>
+        <set_value name="$S.$last_diplomacy" exact="player.age"/>
+        <set_value name="$S.$hostiles" exact="[]"/>
+        <!-- Always use faction.player, never player.ship.owner or cover identity. defaultrelationto would ignore earned reputation and is deliberately NOT used. -->
+        <do_for_each name="$F" in="lookup.faction.list">
+          <do_if value="$F != faction.player and $F != faction.yorha and $F != faction.ownerless and $F.isactive">
+            <set_value name="$V" exact="faction.player.relationto.{$F}"/>
+            <set_value name="$War" exact="faction.player.hasrelation.kill.{$F}"/>
+            <set_value name="$S.$relations.{$F}" exact="table[$value = $V, $war = $War, $observed = player.age]"/>
+            <do_if value="$War">
+              <append_to_list name="$S.$hostiles" exact="$F"/>
+            </do_if>
+            <do_if value="faction.yorha.relationto.{$F} != $V">
+              <set_faction_relation faction="faction.yorha" otherfaction="$F" value="$V"/>
+            </do_if>
+          </do_if>
+        </do_for_each>
+        <do_if value="faction.yorha.relationto.{faction.player} != 1.0">
+          <set_faction_relation faction="faction.yorha" otherfaction="faction.player" value="1.0"/>
+        </do_if>
+      </actions>
+    </library>
+  </cues>
+</mdscript>

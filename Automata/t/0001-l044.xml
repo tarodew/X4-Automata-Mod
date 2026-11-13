@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<language id="44">
+  <page id="985700" title="Nyto Automata" descr="YoRHa faction and operator interface" voice="no">
+    <t id="1">YoRHa</t>
+    <t id="2">YOR</t>
+    <t id="3">Player-sponsored human protectorate. Glory to Mankind!</t>
+    <t id="4">YoRHa Bunker</t>
+    <t id="5">YoRHa Operations</t>
+    <t id="6">Experimental build: runtime not yet proven.</t>
+  </page>
+</language>

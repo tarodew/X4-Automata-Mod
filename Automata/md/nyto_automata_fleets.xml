@@ -1,0 +1,332 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Fleets">
+  <cues>
+    <library name="Initialize" purpose="run_actions">
+      <params/>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$S.$force_templates" exact="table[]"/>
+        <set_value name="$S.$force_templates.$regional" exact="table[$osaka = 10]"/>
+        <set_value name="$S.$force_templates.$hq_defence" exact="table[$syn = 4, $gladius = 40, $jian = 10]"/>
+        <set_value name="$S.$force_templates.$builder_guard" exact="table[$osaka = 2, $jian = 4]"/>
+        <set_value name="$S.$force_templates.$rapid" exact="table[$osaka_travel = 10]"/>
+        <set_value name="$S.$force_templates.$regular" exact="table[$syn = 4, $osaka = 6, $tokyo = 1, $honshu = 2, $takoba = 80, $jian = 4]"/>
+        <set_value name="$S.$force_templates.$strategic" exact="table[$asgard = 1, $syn = 10, $tokyo = 1, $honshu = 4, $takoba = 80, $jian = 4]"/>
+        <set_value name="$S.$force_templates.$patrol" exact="table[$nimcha = 5]"/>
+      </actions>
+    </library>
+    <library name="Ensure" purpose="run_actions">
+      <params>
+        <param name="Key"/>
+        <param name="Type"/>
+        <param name="Home"/>
+        <param name="Space"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not $S.$force_templates?">
+          <run_actions ref="Initialize"/>
+        </do_if>
+        <do_if value="$S.$fleet_index.{$Key}?">
+          <set_value name="$F" exact="$S.$fleet_index.{$Key}"/>
+          <set_value name="$F.$home" exact="$Home"/>
+          <set_value name="$F.$space" exact="$Space"/>
+          <do_all exact="$F.$slots.count" counter="$i">
+            <set_value name="$F.$slots.{$i}.$home" exact="$Home"/>
+          </do_all>
+          <return value="$F"/>
+        </do_if>
+        <set_value name="$F" exact="table[$key = $Key, $type = $Type, $home = $Home, $space = $Space, $slots = [], $leader = null, $carrier = null, $auxiliaries = [], $mission = 'idle', $target = null, $operation = null, $epoch = 0, $ready = 0, $survivors = 0, $desired = 0, $phase = 'forming', $last_tick = 0s, $enabled = true, $pool = []]"/>
+        <set_value name="$S.$fleet_index.{$Key}" exact="$F"/>
+        <append_to_list name="$S.$fleets" exact="$F"/>
+        <set_value name="$Template" exact="$S.$force_templates.{$Type}"/>
+        <do_for_each name="$Role" in="$Template.keys.list">
+          <do_all exact="$Template.{$Role}" counter="$i">
+            <run_actions ref="md.Nyto_Automata_Procurement.EnsureSlot" result="$Q">
+              <param name="Key" value="$Key + ':' + $Role + ':' + $i"/>
+              <param name="Role" value="$Role"/>
+              <param name="Home" value="$Home"/>
+              <param name="Group" value="$Key"/>
+            </run_actions>
+            <set_value name="$Q.$fleet" exact="$F"/>
+            <append_to_list name="$F.$slots" exact="$Q"/>
+          </do_all>
+        </do_for_each>
+        <set_value name="$F.$desired" exact="$F.$slots.count"/>
+        <return value="$F"/>
+      </actions>
+    </library>
+    <library name="Mission" purpose="run_actions">
+      <params>
+        <param name="F"/>
+        <param name="Mission"/>
+        <param name="Target" default="null"/>
+        <param name="Operation" default="null"/>
+      </params>
+      <actions>
+        <do_if value="$F.$mission != $Mission or @$F.$target != $Target or @$F.$operation != $Operation">
+          <set_value name="$F.$mission" exact="$Mission"/>
+          <set_value name="$F.$target" exact="$Target"/>
+          <set_value name="$F.$operation" exact="$Operation"/>
+          <set_value name="$F.$epoch" operation="add" exact="1"/>
+        </do_if>
+      </actions>
+    </library>
+    <library name="Step" purpose="run_actions">
+      <params>
+        <param name="F"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not $F.$enabled">
+          <set_value name="$F.$phase" exact="'suspended'"/>
+          <return/>
+        </do_if>
+        <do_if value="not @$F.$home.exists">
+          <set_value name="$F.$phase" exact="'home_unavailable'"/>
+          <return/>
+        </do_if>
+        <set_value name="$OldLeader" exact="$F.$leader"/>
+        <set_value name="$F.$leader" exact="null"/>
+        <set_value name="$F.$carrier" exact="null"/>
+        <set_value name="$F.$auxiliaries" exact="[]"/>
+        <set_value name="$F.$survivors" exact="0"/>
+        <do_all exact="$F.$slots.count" counter="$i">
+          <set_value name="$Q" exact="$F.$slots.{$i}"/>
+          <do_if value="@$Q.$ship.exists and $Q.$ship.owner == faction.yorha">
+            <set_value name="$F.$survivors" operation="add" exact="1"/>
+            <do_if value="$Q.$role == 'tokyo'">
+              <set_value name="$F.$carrier" exact="$Q.$ship"/>
+            </do_if>
+            <do_if value="$Q.$role == 'honshu'">
+              <append_to_list name="$F.$auxiliaries" exact="$Q.$ship"/>
+            </do_if>
+            <do_if value="not $F.$leader and $Q.$role != 'honshu' and $Q.$role != 'tokyo' and $Q.$role != 'takoba' and $Q.$role != 'jian'">
+              <set_value name="$F.$leader" exact="$Q.$ship"/>
+            </do_if>
+            <do_if value="$Q.$role == 'asgard'">
+              <set_value name="$F.$leader" exact="$Q.$ship"/>
+            </do_if>
+          </do_if>
+        </do_all>
+        <do_if value="$F.$leader != $OldLeader">
+          <set_value name="$F.$epoch" operation="add" exact="1"/>
+        </do_if>
+        <set_value name="$F.$ready" exact="0"/>
+        <do_all exact="$F.$slots.count" counter="$i">
+          <set_value name="$Q" exact="$F.$slots.{$i}"/>
+          <do_if value="$Q.$role == 'nimcha' and $F.$pool.count and (not @$Q.$ship.exists or $Q.$ship.hullpercentage lt 80)">
+            <run_actions ref="md.Nyto_Automata_Service.SwapNimcha">
+              <param name="Q" value="$Q"/>
+              <param name="Pool" value="$F.$pool"/>
+            </run_actions>
+          </do_if>
+          <do_if value="@$Q.$ship.exists and $Q.$ship.owner == faction.yorha">
+            <set_value name="$Service" exact="$F.$home"/>
+            <do_if value="$F.$auxiliaries.count and $Q.$role != 'honshu'">
+              <set_value name="$Distance" exact="999999999km"/>
+              <do_all exact="$F.$auxiliaries.count" counter="$a">
+                <do_if value="$F.$auxiliaries.{$a}.isoperational and $Q.$ship.distanceto.{$F.$auxiliaries.{$a}} lt $Distance">
+                  <set_value name="$Service" exact="$F.$auxiliaries.{$a}"/>
+                  <set_value name="$Distance" exact="$Q.$ship.distanceto.{$Service}"/>
+                </do_if>
+              </do_all>
+            </do_if>
+            <do_if value="$F.$type == 'builder_guard' and $Q.$ship.hullpercentage lt 80">
+              <run_actions ref="GuardRelief">
+                <param name="F" value="$F"/>
+                <param name="Q" value="$Q"/>
+              </run_actions>
+              <set_value name="$OK" exact="true"/>
+            </do_if>
+            <do_else>
+              <run_actions ref="md.Nyto_Automata_Service.Step" result="$OK">
+                <param name="Q" value="$Q"/>
+                <param name="Preferred" value="$Service"/>
+              </run_actions>
+            </do_else>
+            <do_if value="$OK">
+              <set_value name="$F.$ready" operation="add" exact="1"/>
+              <run_actions ref="Assign">
+                <param name="F" value="$F"/>
+                <param name="Q" value="$Q"/>
+              </run_actions>
+            </do_if>
+          </do_if>
+        </do_all>
+        <set_value name="$F.$phase" exact="if $F.$ready == $F.$desired then 'ready' else 'understrength_or_servicing'"/>
+      </actions>
+    </library>
+    <library name="Assign" purpose="run_actions">
+      <params>
+        <param name="F"/>
+        <param name="Q"/>
+      </params>
+      <actions>
+        <set_value name="$Ship" exact="$Q.$ship"/>
+        <do_if value="not $Ship.isoperational or not @$F.$home.exists">
+          <return/>
+        </do_if>
+        <do_if value="@$Q.$assigned and @$Q.$applied_epoch == $F.$epoch">
+          <return/>
+        </do_if>
+        <do_if value="@$Q.$order.exists">
+          <cancel_order order="$Q.$order"/>
+        </do_if>
+        <set_value name="$Q.$order" exact="null"/>
+        <set_value name="$Parent" exact="$F.$leader"/>
+        <do_if value="$Q.$role == 'takoba' or ($Q.$role == 'jian' and $F.$carrier)">
+          <set_value name="$Parent" exact="$F.$carrier"/>
+        </do_if>
+        <do_if value="$F.$type == 'builder_guard'">
+          <set_value name="$Parent" exact="$F.$home"/>
+        </do_if>
+        <do_if value="$Parent and $Parent != $Ship">
+          <set_object_commander object="$Ship" commander="$Parent" assignment="if $Q.$role == 'honshu' then assignment.supplyfleet else (if $Q.$role == 'takoba' or ($Q.$role == 'jian' and $F.$carrier) then assignment.interception else assignment.defence)" informfleetmanager="false"/>
+        </do_if>
+        <do_else>
+          <remove_object_commander object="$Ship"/>
+        </do_else>
+        <do_if value="$Q.$role == 'honshu' and $Parent and $Parent != $Ship">
+          <create_order object="$Ship" id="'SupplyFleet'" default="true">
+            <param name="target" value="$Parent"/>
+            <param name="formationparam" value="15km"/>
+          </create_order>
+        </do_if>
+        <do_elseif value="$Q.$role == 'tokyo' and $F.$leader and $F.$leader != $Ship">
+          <create_order object="$Ship" id="'Escort'" default="true">
+            <param name="target" value="$F.$leader"/>
+            <param name="formationparam" value="12km"/>
+            <param name="pursuedistance" value="5km"/>
+          </create_order>
+        </do_elseif>
+        <do_elseif value="$Q.$role == 'takoba' or ($Q.$role == 'jian' and $F.$carrier)">
+          <do_if value="$Parent">
+            <create_order object="$Ship" id="'Escort'" default="true">
+              <param name="target" value="$Parent"/>
+              <param name="pursuedistance" value="30km"/>
+            </create_order>
+          </do_if>
+        </do_elseif>
+        <do_elseif value="$F.$type == 'builder_guard'">
+          <create_order object="$Ship" id="'ProtectShip'" default="true">
+            <param name="target" value="$F.$home"/>
+            <param name="pursuedistance" value="10km"/>
+          </create_order>
+        </do_elseif>
+        <do_elseif value="@$F.$target.exists and ($F.$mission == 'attack' or $F.$mission == 'incident')">
+          <create_order object="$Ship" id="'Attack'" name="$Q.$order">
+            <param name="primarytarget" value="$F.$target"/>
+            <param name="checkrelation" value="true"/>
+            <param name="allowothertargets" value="false"/>
+            <param name="pursuedistance" value="20km"/>
+            <param name="pursuetargets" value="false"/>
+          </create_order>
+        </do_elseif>
+        <do_elseif value="@$F.$target.exists and $F.$mission == 'escort'">
+          <create_order object="$Ship" id="'ProtectShip'" name="$Q.$order">
+            <param name="target" value="$F.$target"/>
+            <param name="pursuedistance" value="10km"/>
+          </create_order>
+        </do_elseif>
+        <do_elseif value="$F.$type == 'patrol'">
+          <do_if value="$Ship == $F.$leader">
+            <create_order object="$Ship" id="'Patrol'" default="true">
+              <param name="space" value="$F.$space"/>
+              <param name="pursuetargets" value="false"/>
+            </create_order>
+          </do_if>
+          <do_else>
+            <create_order object="$Ship" id="'Escort'" default="true">
+              <param name="target" value="$F.$leader"/>
+              <param name="pursuedistance" value="20km"/>
+            </create_order>
+          </do_else>
+        </do_elseif>
+        <do_elseif value="$F.$type == 'regional'">
+          <create_order object="$Ship" id="'Patrol'" default="true">
+            <param name="space" value="$F.$space"/>
+            <param name="pursuetargets" value="false"/>
+          </create_order>
+        </do_elseif>
+        <do_else>
+          <create_order object="$Ship" id="'ProtectStation'" default="true">
+            <param name="station" value="$F.$home"/>
+            <param name="radius" value="30km"/>
+          </create_order>
+        </do_else>
+        <set_value name="$Q.$assigned" exact="true"/>
+        <set_value name="$Q.$applied_epoch" exact="$F.$epoch"/>
+      </actions>
+    </library>
+    <library name="GuardRelief" purpose="run_actions">
+      <params>
+        <param name="F"/>
+        <param name="Q"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not @$Q.$relief">
+          <run_actions ref="md.Nyto_Automata_Procurement.EnsureSlot" result="$Q.$relief">
+            <param name="Key" value="$Q.$key + ':relief:' + $Q.$generation"/>
+            <param name="Role" value="$Q.$role"/>
+            <param name="Home" value="$F.$home"/>
+            <param name="Group" value="'relief'"/>
+          </run_actions>
+          <do_all exact="$S.$repair_pool.count" counter="$i" reverse="true">
+            <set_value name="$Spare" exact="$S.$repair_pool.{$i}"/>
+            <do_if value="not @$Q.$relief.$ship.exists and not @$Spare.$reserve_slot and $Spare.$role == $Q.$role and @$Spare.$ship.isoperational and $Spare.$phase == 'ready'">
+              <set_value name="$Q.$relief.$ship" exact="$Spare.$ship"/>
+              <set_value name="$Q.$relief.$phase" exact="'ready'"/>
+              <remove_value name="$S.$repair_pool.{$i}"/>
+            </do_if>
+          </do_all>
+        </do_if>
+        <set_value name="$R" exact="$Q.$relief"/>
+        <do_if value="@$R.$ship.isoperational">
+          <do_if value="not @$R.$assigned">
+            <create_order object="$R.$ship" id="'ProtectShip'" default="true">
+              <param name="target" value="$F.$home"/>
+            </create_order>
+            <set_value name="$R.$assigned" exact="true"/>
+          </do_if>
+          <do_if value="$R.$ship.sector == $F.$home.sector and $R.$ship.distanceto.{$F.$home} le 10km">
+            <set_value name="$Old" exact="$Q.$ship"/>
+            <set_value name="$Q.$ship" exact="$R.$ship"/>
+            <set_value name="$Q.$assigned" exact="false"/>
+            <set_value name="$Q.$generation" operation="add" exact="1"/>
+            <set_value name="$Q.$ship.$nyto_automata_slot" exact="$Q.$key"/>
+            <set_value name="$R.$ship" exact="null"/>
+            <set_value name="$R.$enabled" exact="false"/>
+            <set_value name="$Q.$relief" exact="null"/>
+            <remove_object_commander object="$Old"/>
+            <create_order object="$Old" id="'Wait'" default="true"/>
+            <run_actions ref="md.Nyto_Automata_Core.ServiceHome" result="$Service">
+              <param name="Sector" value="$Old.sector"/>
+            </run_actions>
+            <append_to_list name="$S.$repair_pool" exact="table[$key = $Q.$key + ':retired', $ship = $Old, $role = $Q.$role, $home = $Service, $phase = 'recovering', $reserve_slot = null]"/>
+          </do_if>
+        </do_if>
+      </actions>
+    </library>
+    <cue name="Tick" instantiate="true">
+      <conditions>
+        <event_cue_signalled cue="md.Nyto_Automata_State.Pulse"/>
+      </conditions>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$settings.$enabled and $S.$settings.$security">
+          <do_all exact="[$S.$fleets.count, 6].min" counter="$i">
+            <set_value name="$S.$cursor_fleet" operation="add" exact="1"/>
+            <do_if value="$S.$cursor_fleet gt $S.$fleets.count">
+              <set_value name="$S.$cursor_fleet" exact="1"/>
+            </do_if>
+            <run_actions ref="Step">
+              <param name="F" value="$S.$fleets.{$S.$cursor_fleet}"/>
+            </run_actions>
+          </do_all>
+        </do_if>
+      </actions>
+    </cue>
+  </cues>
+</mdscript>

@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_State">
+  <cues>
+    <!-- Both paths are intentional. The initializer never erases existing state. -->
+    <cue name="OnSetup" instantiate="true">
+      <conditions>
+        <event_cue_signalled cue="md.Setup.Start"/>
+      </conditions>
+      <actions>
+        <run_actions ref="Initialize"/>
+      </actions>
+    </cue>
+    <cue name="FirstBoot" checkinterval="2s">
+      <conditions>
+        <check_value value="player.entity and md.Setup.Start.state == cuestate.complete"/>
+      </conditions>
+      <actions>
+        <run_actions ref="Initialize"/>
+      </actions>
+    </cue>
+    <library name="Initialize" purpose="run_actions">
+      <actions>
+        <do_if value="not global.$nyto_automata?">
+          <set_value name="global.$nyto_automata" exact="table[]"/>
+          <set_value name="$S" exact="global.$nyto_automata"/>
+          <set_value name="$S.$schema" exact="2"/>
+          <set_value name="$S.$created" exact="player.age"/>
+          <set_value name="$S.$sectors" exact="[]"/>
+          <set_value name="$S.$sector_index" exact="table[]"/>
+          <set_value name="$S.$clusters" exact="[]"/>
+          <set_value name="$S.$projects" exact="[]"/>
+          <set_value name="$S.$project_index" exact="table[]"/>
+          <set_value name="$S.$slots" exact="[]"/>
+          <set_value name="$S.$slot_index" exact="table[]"/>
+          <set_value name="$S.$fleets" exact="[]"/>
+          <set_value name="$S.$fleet_index" exact="table[]"/>
+          <set_value name="$S.$incidents" exact="[]"/>
+          <set_value name="$S.$incident_index" exact="table[]"/>
+          <set_value name="$S.$operations" exact="[]"/>
+          <set_value name="$S.$intel" exact="table[]"/>
+          <set_value name="$S.$builders" exact="[]"/>
+          <set_value name="$S.$diagnostics" exact="table[$ticks = 0, $duplicates_prevented = 0, $last_report = 0s]"/>
+          <set_value name="$S.$settings" exact="table[$enabled = false, $construction = false, $procurement = false, $security = false, $war = false, $economy = false, $recon = false, $automatic_expansion = false, $allow_sponsor_building = true, $automatic_hq_relocation = false, $completed_station_deconstruction = false]"/>
+          <set_value name="$S.$founding_builder_issued" exact="false"/>
+          <set_value name="$S.$bunker" exact="null"/>
+          <set_value name="$S.$arsenal" exact="null"/>
+          <set_value name="$S.$boot_count" exact="0"/>
+          <write_to_logbook category="general" text="'Automata: fresh YoRHa state initialized. Experimental systems are paused. Use YoRHa Operations in a friendly human ship or station conversation.'" title="'YoRHa Operations'"/>
+        </do_if>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$schema != 2">
+          <set_value name="$S.$settings.$enabled" exact="false"/>
+          <write_to_logbook category="general" text="'Automata stopped: unsupported saved-state schema. No state was reset or migrated.'" title="'YoRHa Operations'"/>
+          <return/>
+        </do_if>
+        <set_value name="$S.$boot_count" operation="add" exact="1"/>
+        <run_actions ref="md.Nyto_Automata_Catalog.Initialize"/>
+        <run_actions ref="md.Nyto_Automata_Core.EnsureState"/>
+        <set_faction_relation faction="faction.yorha" otherfaction="faction.player" value="1.0"/>
+        <run_actions ref="FindFoundation"/>
+        <run_actions ref="md.Nyto_Automata_Diplomacy.Sync"/>
+        <run_actions ref="md.Nyto_Automata_Equipment.Initialize"/>
+      </actions>
+    </library>
+    <library name="FindFoundation" purpose="run_actions">
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <find_sector name="$Earth" macro="macro.cluster_104_sector001_macro"/>
+        <do_if value="not $Earth">
+          <set_value name="$S.$foundation_status" exact="'EARTH_NOT_AVAILABLE'"/>
+          <return/>
+        </do_if>
+        <find_station name="$Found" space="$Earth" owner="faction.yorha" godstationentry="'nyto_automata_bunker_earth'" multiple="true"/>
+        <do_if value="$Found.count != 1">
+          <set_value name="$S.$foundation_status" exact="if $Found.count then 'DUPLICATE_BUNKER_BLOCKED' else 'WAITING_FOR_GOD_BUNKER'"/>
+          <return/>
+        </do_if>
+        <set_value name="$S.$bunker" exact="$Found.{1}"/>
+        <set_object_name object="$S.$bunker" name="{985700,4}"/>
+        <set_faction_headquarters faction="faction.yorha" station="$S.$bunker"/>
+        <set_value name="$S.$foundation_status" exact="'BUNKER_FOUND'"/>
+        <!-- The sole permitted free operational hull. Latch before creation. -->
+        <do_if value="not $S.$founding_builder_issued and $S.$bunker.isoperational">
+          <set_value name="$S.$founding_builder_issued" exact="true"/>
+          <create_ship name="$Builder" macro="macro.ship_ter_xl_builder_01_a_macro" sector="$Earth" commandeerable="false">
+            <owner exact="faction.yorha" overridenpc="true"/>
+            <pilot>
+              <select faction="faction.terran" tags="tag.aipilot"/>
+            </pilot>
+            <loadout>
+              <level exact="1.0" faction="faction.terran"/>
+              <variation exact="0"/>
+            </loadout>
+            <safepos x="45km" y="15km" z="-65km"/>
+          </create_ship>
+          <do_if value="$Builder">
+            <set_value name="$S.$founding_builder" exact="$Builder"/>
+            <append_to_list name="$S.$builders" exact="$Builder"/>
+            <set_object_name object="$Builder" name="'YoRHa Founding Builder'"/>
+            <create_order object="$Builder" id="'Wait'" default="true"/>
+            <set_value name="$S.$foundation_status" exact="'FOUNDATION_READY'"/>
+          </do_if>
+          <do_else>
+            <set_value name="$S.$foundation_status" exact="'FOUNDING_BUILDER_CREATION_FAILED_NO_RETRY'"/>
+          </do_else>
+        </do_if>
+      </actions>
+    </library>
+    <cue name="Heartbeat" checkinterval="2s">
+      <conditions>
+        <check_value value="global.$nyto_automata? and global.$nyto_automata.$schema == 2"/>
+      </conditions>
+      <actions>
+        <set_value name="global.$nyto_automata.$diagnostics.$ticks" operation="add" exact="1"/>
+        <run_actions ref="md.Nyto_Automata_Core.EnsureState"/>
+        <do_if value="not @global.$nyto_automata.$bunker.exists or not global.$nyto_automata.$founding_builder_issued">
+          <run_actions ref="FindFoundation"/>
+        </do_if>
+        <signal_cue cue="md.Nyto_Automata_State.Pulse"/>
+      </actions>
+      <cues>
+        <cue name="NextHeartbeat">
+          <delay exact="10s"/>
+          <actions>
+            <reset_cue cue="Heartbeat"/>
+          </actions>
+        </cue>
+      </cues>
+    </cue>
+    <!-- A single persisted heartbeat, not separate chains restarted after load. -->
+    <cue name="Pulse" instantiate="true">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <actions/>
+    </cue>
+    <library name="Report" purpose="run_actions">
+      <actions>
+        <do_if value="not global.$nyto_automata?">
+          <return/>
+        </do_if>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Text" exact="'Automata / YoRHa\nSchema: %1 | Foundation: %2\nEnabled: %3 | Sectors: %4 | Projects: %5 | Clusters: %6\nForce slots: %7 | Formations: %8 | Incidents: %9\nBunker: %10\nNo in-game validation has been claimed by this test build.'.[$S.$schema, @$S.$foundation_status, $S.$settings.$enabled, $S.$sectors.count, $S.$projects.count, $S.$clusters.count, $S.$slots.count, $S.$fleets.count, $S.$incidents.count, @$S.$bunker.knownname]"/>
+        <write_to_logbook category="general" text="$Text" title="'YoRHa Operations'"/>
+        <show_help custom="$Text" duration="20s"/>
+      </actions>
+    </library>
+  </cues>
+</mdscript>

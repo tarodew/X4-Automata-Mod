@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='utf-8'?>
+<diff>
+  <add sel="/factions">
+    <faction id="yorha" name="{985700,1}" shortname="{985700,2}" description="{985700,3}" primaryrace="terran" behaviourset="default" tags="claimspace economic police privateloadout privateship standard" policefaction="yorha">
+      <color ref="faction_terran"/>
+      <icon active="faction_terran" inactive="faction_terran"/>
+      <banner ref="diplomacy_banner_terran"/>
+      <licences>
+        <licence type="capitalequipment" name="{20207,2591}" icon="bse_star" minrelation="0.1" precursor="ceremonyally"/>
+        <licence type="capitalship" name="{20207,3291}" icon="bse_star" minrelation="0.1" precursor="ceremonyally"/>
+        <licence type="ceremonyally" name="{20207,5291}" minrelation="0.1"/>
+        <licence type="ceremonyfriend" name="{20207,5281}" minrelation="0.01"/>
+        <licence type="generaluseequipment" name="{20207,2561}" minrelation="-0.01" tags="basic"/>
+        <licence type="generaluseship" name="{20207,2571}" minrelation="0.01" precursor="ceremonyfriend"/>
+        <licence type="innercore_access" name="{20207,8001}" description="{20207,8002}" grantedtext="{20207,8003}" notgrantedtext="{20207,8004}" minrelation="0.1" tags="accessrestricted"/>
+        <licence type="militaryequipment" name="{20207,2581}" icon="bse_star" minrelation="0.01" precursor="ceremonyfriend"/>
+        <licence type="militaryship" name="{20207,3281}" icon="bse_star" minrelation="0.01" precursor="ceremonyfriend"/>
+        <licence type="outercore_access" name="{20207,8011}" description="{20207,8012}" grantedtext="{20207,8013}" notgrantedtext="{20207,8014}" minrelation="0.01" tags="accessrestricted"/>
+        <licence type="police" name="{20207,1091}" description="{20207,1092}" minrelation="0.01" precursor="ceremonyfriend" price="156000" maxlegalscan="2"/>
+        <licence type="shipsalecontract" name="{20207,9141}" description="{20207,9142}" minrelation="0.1" precursor="ceremonyally" price="1" tags="hidden"/>
+        <licence type="station_equip_lxl" name="{20207,7751}" minrelation="0.1" precursor="ceremonyally"/>
+        <licence type="station_equip_sm" name="{20207,7761}" minrelation="0.1" precursor="ceremonyally"/>
+        <licence type="station_gen_advanced" name="{20207,7771}" minrelation="0.1" precursor="ceremonyally"/>
+        <licence type="station_gen_basic" name="{20207,7781}" minrelation="-0.01" tags="basic"/>
+        <licence type="station_gen_intermediate" name="{20207,7791}" minrelation="0.01" precursor="ceremonyfriend"/>
+        <licence type="tradesubscription" name="{20207,4141}" description="{20207,4142}" minrelation="0.1" precursor="ceremonyally" price="10000000"/>
+        <licence type="capitalequipment" factions="terran pioneers player"/>
+        <licence type="capitalship" factions="terran pioneers player"/>
+        <licence type="generaluseequipment" factions="terran pioneers player"/>
+        <licence type="generaluseship" factions="terran pioneers player"/>
+        <licence type="militaryequipment" factions="terran pioneers player"/>
+        <licence type="militaryship" factions="terran pioneers player"/>
+        <licence type="station_equip_lxl" factions="terran pioneers player"/>
+        <licence type="station_equip_sm" factions="terran pioneers player"/>
+        <licence type="station_gen_advanced" factions="terran pioneers player"/>
+        <licence type="station_gen_basic" factions="terran pioneers player"/>
+        <licence type="station_gen_intermediate" factions="terran pioneers player"/>
+        <licence type="innercore_access" factions="terran pioneers player"/>
+        <licence type="outercore_access" factions="terran pioneers player"/>
+      </licences>
+      <relations>
+        <relation faction="player" relation="1.0"/>
+      </relations>
+    </faction>
+  </add>
+  <add sel="/factions/faction[@id=&quot;terran&quot;]/licences">
+    <licence type="capitalequipment" factions="yorha"/>
+    <licence type="capitalship" factions="yorha"/>
+    <licence type="generaluseequipment" factions="yorha"/>
+    <licence type="generaluseship" factions="yorha"/>
+    <licence type="militaryequipment" factions="yorha"/>
+    <licence type="militaryship" factions="yorha"/>
+    <licence type="station_equip_lxl" factions="yorha"/>
+    <licence type="station_equip_sm" factions="yorha"/>
+    <licence type="station_gen_advanced" factions="yorha"/>
+    <licence type="station_gen_basic" factions="yorha"/>
+    <licence type="station_gen_intermediate" factions="yorha"/>
+    <licence type="innercore_access" factions="yorha"/>
+    <licence type="outercore_access" factions="yorha"/>
+  </add>
+  <add sel="/factions/faction[@id=&quot;pioneers&quot;]/licences">
+    <licence type="capitalequipment" factions="yorha"/>
+    <licence type="capitalship" factions="yorha"/>
+    <licence type="generaluseequipment" factions="yorha"/>
+    <licence type="generaluseship" factions="yorha"/>
+    <licence type="militaryequipment" factions="yorha"/>
+    <licence type="militaryship" factions="yorha"/>
+    <licence type="station_equip_lxl" factions="yorha"/>
+    <licence type="station_equip_sm" factions="yorha"/>
+    <licence type="station_gen_advanced" factions="yorha"/>
+    <licence type="station_gen_basic" factions="yorha"/>
+    <licence type="station_gen_intermediate" factions="yorha"/>
+    <licence type="innercore_access" factions="yorha"/>
+    <licence type="outercore_access" factions="yorha"/>
+  </add>
+</diff>

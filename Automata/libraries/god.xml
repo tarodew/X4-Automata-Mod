@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<diff>
+  <add sel="/god/stations">
+    <station id="nyto_automata_bunker_earth" race="terran" owner="yorha" type="tradingstation">
+      <quotas>
+        <quota galaxy="1" sector="1" zone="1"/>
+      </quotas>
+      <location class="sector" macro="cluster_104_sector001_macro"/>
+      <position x="45000" y="12000" z="-65000" pitch="0" roll="0" yaw="0"/>
+      <station macro="station_ter_tradestation_base_01_macro" constructionplan="'nyto_automata_bunker'">
+        <loadout>
+          <level exact="1.0"/>
+          <variation exact="0"/>
+        </loadout>
+      </station>
+    </station>
+  </add>
+</diff>

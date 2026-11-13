@@ -1,0 +1,150 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Core">
+  <cues>
+    <library name="EnsureState" purpose="run_actions">
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$schema != 2">
+          <return/>
+        </do_if>
+        <do_if value="not $S.$runtime_revision? or $S.$runtime_revision lt 10">
+          <set_value name="$S.$runtime_revision" exact="10"/>
+          <set_value name="$S.$build" exact="'V9.0.0A0.3 CONSTRUCTION_CORE_CHECKPOINT'"/>
+          <do_if value="not $S.$log?">
+            <set_value name="$S.$log" exact="[]"/>
+          </do_if>
+          <do_if value="not $S.$loans?">
+            <set_value name="$S.$loans" exact="[]"/>
+          </do_if>
+          <do_if value="not $S.$wartargets?">
+            <set_value name="$S.$wartargets" exact="[]"/>
+          </do_if>
+          <do_if value="not $S.$hostiles?">
+            <set_value name="$S.$hostiles" exact="[]"/>
+          </do_if>
+          <do_if value="not $S.$repair_pool?">
+            <set_value name="$S.$repair_pool" exact="[]"/>
+          </do_if>
+          <do_if value="not $S.$economy_records?">
+            <set_value name="$S.$economy_records" exact="table[]"/>
+          </do_if>
+          <do_if value="not $S.$economic_cursors?">
+            <set_value name="$S.$economic_cursors" exact="table[]"/>
+          </do_if>
+          <do_if value="not $S.$intel_records?">
+            <set_value name="$S.$intel_records" exact="[]"/>
+          </do_if>
+          <do_if value="not $S.$core_bias?">
+            <set_value name="$S.$core_bias" exact="table[]"/>
+          </do_if>
+          <do_if value="not $S.$policy?">
+            <set_value name="$S.$policy" exact="'balanced'"/>
+          </do_if>
+          <do_if value="not $S.$settings.$divisions?">
+            <set_value name="$S.$settings.$divisions" exact="false"/>
+          </do_if>
+          <do_if value="not $S.$settings.$hq_promotion?">
+            <set_value name="$S.$settings.$hq_promotion" exact="false"/>
+          </do_if>
+          <do_if value="not $S.$settings.$capital_relief?">
+            <set_value name="$S.$settings.$capital_relief" exact="true"/>
+          </do_if>
+          <do_if value="not $S.$settings.$allow_player_civilian_flee?">
+            <set_value name="$S.$settings.$allow_player_civilian_flee" exact="true"/>
+          </do_if>
+          <do_if value="not $S.$settings.$automatic_expansion?">
+            <set_value name="$S.$settings.$automatic_expansion" exact="false"/>
+          </do_if>
+          <set_value name="$S.$settings.$automatic_hq_relocation" exact="false"/>
+          <set_value name="$S.$settings.$completed_station_deconstruction" exact="false"/>
+          <set_value name="$S.$cursor_project" exact="0"/>
+          <set_value name="$S.$cursor_slot" exact="0"/>
+          <set_value name="$S.$cursor_fleet" exact="0"/>
+          <set_value name="$S.$cursor_incident" exact="0"/>
+          <set_value name="$S.$cursor_recon" exact="0"/>
+          <set_value name="$S.$last_economy" exact="0s"/>
+          <set_value name="$S.$last_establishment" exact="0s"/>
+          <set_value name="$S.$last_diplomacy" exact="0s"/>
+          <set_value name="$S.$last_core" exact="0s"/>
+          <set_value name="$S.$last_expansion" exact="0s"/>
+        </do_if>
+        <do_if value="not $S.$integration_revision? or $S.$integration_revision lt 40">
+          <set_value name="$S.$integration_revision" exact="40"/>
+          <set_value name="$S.$relations" exact="table[]"/>
+          <set_value name="$S.$hostiles" exact="[]"/>
+          <set_value name="$S.$last_diplomacy" exact="0s"/>
+          <set_value name="$S.$last_supply" exact="0s"/>
+          <set_value name="$S.$build" exact="'V9.0.0A0.4'"/>
+          <set_value name="$S.$queue_cursor" exact="0"/>
+          <set_value name="$S.$yard_cache_time" exact="0s"/>
+          <set_value name="$S.$yards" exact="[]"/>
+          <set_value name="$S.$settings.$diplomacy" exact="true"/>
+        </do_if>
+        <do_if value="not $S.$security_revision? or $S.$security_revision lt 50">
+          <set_value name="$S.$security_revision" exact="50"/>
+          <set_value name="$S.$build" exact="'V9.0.0A0.5'"/>
+          <set_value name="$S.$last_security" exact="0s"/>
+          <set_value name="$S.$last_recon" exact="0s"/>
+          <set_value name="$S.$settings.$security" exact="false"/>
+          <set_value name="$S.$settings.$recon" exact="false"/>
+        </do_if>
+      </actions>
+    </library>
+    <library name="Log" purpose="run_actions">
+      <params>
+        <param name="Text"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <append_to_list name="$S.$log" exact="table[$time = player.age, $text = $Text]"/>
+        <do_if value="$S.$log.count gt 100">
+          <remove_value name="$S.$log.{1}"/>
+        </do_if>
+        <write_to_logbook category="general" text="'Automata: ' + $Text" title="'YoRHa Operations'"/>
+      </actions>
+    </library>
+    <library name="SectorKey" purpose="run_actions">
+      <params>
+        <param name="Sector"/>
+      </params>
+      <actions>
+        <do_if value="not $Sector">
+          <return value="''"/>
+        </do_if>
+        <return value="$Sector.macro.id"/>
+      </actions>
+    </library>
+    <library name="ServiceHome" purpose="run_actions">
+      <params>
+        <param name="Sector"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Best" exact="null"/>
+        <set_value name="$Distance" exact="9999"/>
+        <do_all exact="$S.$clusters.count" counter="$i">
+          <set_value name="$C" exact="$S.$clusters.{$i}"/>
+          <do_if value="@$C.$hq.isoperational and $C.$hq.owner == faction.yorha">
+            <set_value name="$D" exact="$Sector.gatedistance.{$C.$hq}"/>
+            <do_if value="$D ge 0 and $D lt $Distance">
+              <set_value name="$Best" exact="$C.$hq"/>
+              <set_value name="$Distance" exact="$D"/>
+            </do_if>
+          </do_if>
+        </do_all>
+        <do_if value="not $Best and @$S.$bunker.isoperational">
+          <set_value name="$Best" exact="$S.$bunker"/>
+        </do_if>
+        <return value="$Best"/>
+      </actions>
+    </library>
+    <library name="FormalEnemy" purpose="run_actions">
+      <params>
+        <param name="Faction"/>
+      </params>
+      <actions>
+        <return value="$Faction != faction.player and $Faction != faction.yorha and @global.$nyto_automata.$relations.{$Faction}.$war"/>
+      </actions>
+    </library>
+  </cues>
+</mdscript>

@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Recon">
+  <cues>
+    <library name="Establish" purpose="run_actions">
+      <params/>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_all exact="$S.$clusters.count" counter="$c">
+          <set_value name="$C" exact="$S.$clusters.{$c}"/>
+          <do_if value="@$C.$hq.isoperational">
+            <do_all exact="4" counter="$i">
+              <run_actions ref="md.Nyto_Automata_Procurement.EnsureSlot" result="$Q">
+                <param name="Key" value="$C.$key + ':recon:' + $i"/>
+                <param name="Role" value="'rapier'"/>
+                <param name="Home" value="$C.$hq"/>
+                <param name="Group" value="'recon'"/>
+              </run_actions>
+              <run_actions ref="Step">
+                <param name="Q" value="$Q"/>
+              </run_actions>
+            </do_all>
+          </do_if>
+        </do_all>
+      </actions>
+    </library>
+    <library name="Observe" purpose="run_actions">
+      <params>
+        <param name="Observer"/>
+        <param name="Target"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not $Observer.exists or not $Target.exists or not $Target.isradarvisible or $Observer.sector != $Target.sector or $Observer.distanceto.{$Target} gt $Observer.maxradarrange">
+          <return/>
+        </do_if>
+        <set_value name="$Key" exact="$Target"/>
+        <do_if value="not $S.$intel.{$Key}?">
+          <set_value name="$Record" exact="table[$object = $Target, $first_seen = player.age]"/>
+          <set_value name="$S.$intel.{$Key}" exact="$Record"/>
+          <append_to_list name="$S.$intel_records" exact="$Record"/>
+        </do_if>
+        <set_value name="$Record" exact="$S.$intel.{$Key}"/>
+        <set_value name="$Record.$last_seen" exact="player.age"/>
+        <set_value name="$Record.$observer" exact="$Observer"/>
+        <set_value name="$Record.$sector" exact="$Target.sector"/>
+        <set_value name="$Record.$owner" exact="$Target.owner"/>
+        <set_value name="$Record.$position" exact="$Target.position"/>
+        <set_value name="$Record.$source" exact="'YORHA_SHIP_RADAR'"/>
+      </actions>
+    </library>
+    <library name="Step" purpose="run_actions">
+      <params>
+        <param name="Q"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not @$Q.$ship.isoperational">
+          <return/>
+        </do_if>
+        <run_actions ref="md.Nyto_Automata_Service.Step" result="$OK">
+          <param name="Q" value="$Q"/>
+        </run_actions>
+        <do_if value="not $OK">
+          <return/>
+        </do_if>
+        <set_value name="$Ship" exact="$Q.$ship"/>
+        <find_ship name="$Contacts" space="$Ship.sector" multiple="true"/>
+        <find_station name="$Stations" space="$Ship.sector" multiple="true"/>
+        <append_list_elements name="$Contacts" other="$Stations"/>
+        <set_value name="$Danger" exact="null"/>
+        <do_all exact="$Contacts.count" counter="$i">
+          <set_value name="$T" exact="$Contacts.{$i}"/>
+          <do_if value="$T.owner != faction.yorha and $T.isradarvisible and $Ship.distanceto.{$T} le $Ship.maxradarrange">
+            <run_actions ref="Observe">
+              <param name="Observer" value="$Ship"/>
+              <param name="Target" value="$T"/>
+            </run_actions>
+            <do_if value="$T.mayattack.{$Ship} and $Ship.distanceto.{$T} lt 25km">
+              <set_value name="$Danger" exact="$T"/>
+            </do_if>
+          </do_if>
+        </do_all>
+        <do_if value="$Danger">
+          <do_if value="not @$Q.$escape.exists and player.age ge @$Q.$last_escape + 30s">
+            <create_order object="$Ship" id="'Flee'" priority="true" name="$Q.$escape">
+              <param name="attacker" value="$Danger"/>
+              <param name="holdfire" value="true"/>
+              <param name="donotdrop" value="true"/>
+            </create_order>
+            <set_value name="$Q.$last_escape" exact="player.age"/>
+          </do_if>
+          <return/>
+        </do_if>
+        <do_if value="not @$Q.$assigned or player.age ge @$Q.$last_recon + 10min">
+          <find_sector_in_range name="$Candidates" object="$Q.$home" maxdistance="3" multiple="true"/>
+          <set_value name="$Best" exact="null"/>
+          <set_value name="$Oldest" exact="player.age + 1s"/>
+          <do_if value="not $Q.$visits?">
+            <set_value name="$Q.$visits" exact="table[]"/>
+          </do_if>
+          <do_all exact="$Candidates.count" counter="$i">
+            <set_value name="$Sector" exact="$Candidates.{$i}"/>
+            <set_value name="$Visited" exact="@$Q.$visits.{$Sector.macro.id}"/>
+            <do_if value="(not $Sector.owner or not faction.player.hasrelation.kill.{$Sector.owner}) and (not $Visited? or $Visited lt $Oldest)">
+              <set_value name="$Best" exact="$Sector"/>
+              <set_value name="$Oldest" exact="if $Visited? then $Visited else 0s"/>
+            </do_if>
+          </do_all>
+          <do_if value="$Best">
+            <create_order object="$Ship" id="'Recon'" default="true">
+              <param name="targetspace" value="$Best"/>
+              <param name="hq" value="$Q.$home"/>
+              <param name="exploreupdate" value="true"/>
+              <param name="police" value="false"/>
+              <param name="deploysatellites" value="false"/>
+            </create_order>
+            <set_value name="$Q.$visits.{$Best.macro.id}" exact="player.age"/>
+            <set_value name="$Q.$last_recon" exact="player.age"/>
+            <set_value name="$Q.$assigned" exact="true"/>
+          </do_if>
+        </do_if>
+      </actions>
+    </library>
+    <cue name="Tick" instantiate="true">
+      <conditions>
+        <event_cue_signalled cue="md.Nyto_Automata_State.Pulse"/>
+      </conditions>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$settings.$enabled and $S.$settings.$recon and player.age ge @$S.$last_recon + 1min">
+          <set_value name="$S.$last_recon" exact="player.age"/>
+          <run_actions ref="Establish"/>
+          <do_all exact="$S.$intel_records.count" counter="$i" reverse="true">
+            <set_value name="$R" exact="$S.$intel_records.{$i}"/>
+            <do_if value="player.age gt $R.$last_seen + 1h">
+              <remove_value name="$S.$intel.{$R.$object}"/>
+              <remove_value name="$S.$intel_records.{$i}"/>
+            </do_if>
+          </do_all>
+        </do_if>
+      </actions>
+    </cue>
+  </cues>
+</mdscript>

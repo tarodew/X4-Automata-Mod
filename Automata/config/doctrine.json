@@ -1,0 +1,114 @@
+{
+  "identity": {
+    "faction": "yorha",
+    "extension_id": "nyto_automata",
+    "game_version": "9.0.0",
+    "player_relation": 1.0,
+    "bunker_sector": "cluster_104_sector001_macro",
+    "diplomacy": "mirror_true_player_faction_relations_not_ship_cover"
+  },
+  "limits": {
+    "builders": 14,
+    "cluster_sectors": 4,
+    "arsenal_stations": 40,
+    "normal_sector_stations": 14,
+    "asgard": 1
+  },
+  "security": {
+    "patrol_per_sector": 40,
+    "wing_size": 5,
+    "police_per_sector": 10,
+    "incident_minimum": 10,
+    "cluster_nimcha_pool": 80,
+    "arsenal_patrol": 120,
+    "arsenal_police": 20,
+    "arsenal_nimcha_pool": 40,
+    "reserve_preformed_wings": false
+  },
+  "forces": {
+    "regional": {
+      "osaka": 10
+    },
+    "hq_defence": {
+      "syn": 4,
+      "gladius": 40,
+      "jian": 10
+    },
+    "builder_guard": {
+      "osaka": 2,
+      "jian": 4
+    },
+    "rapid": {
+      "osaka_travel": 10
+    },
+    "regular": {
+      "syn": 4,
+      "osaka": 6,
+      "tokyo": 1,
+      "honshu": 2,
+      "takoba": 80,
+      "jian": 4
+    },
+    "strategic": {
+      "asgard": 1,
+      "syn": 10,
+      "tokyo": 1,
+      "honshu": 4
+    }
+  },
+  "test_defaults": {
+    "regular_divisions": 4,
+    "regular_divisions_status": "intended establishment; not a new approval",
+    "strategic_carrier_takoba": 80,
+    "strategic_carrier_jian": 4,
+    "strategic_carrier_status": "reversible test default following regular carrier",
+    "rapier_per_cluster": 4,
+    "rapier_status": "reversible test default",
+    "surface_shield_mk": 2,
+    "capital_l_shield_mk": 3,
+    "capital_xl_shield_mk": 2,
+    "weapon_s": "proton_mk2",
+    "weapon_m": "proton_mk2",
+    "nimcha_missile": "light_smart",
+    "fixed_numerical_tests_do_not_reopen_user_doctrine": true,
+    "repair_hull_trigger_percent": 80,
+    "repair_ready_hull_percent": 98,
+    "service_ammo_fraction": 0.75,
+    "cluster_hq_promotion_manual_default": true,
+    "mining_capacity_margin": 1.15,
+    "initial_miner_round_trip_seconds": 1800,
+    "mining_adaptation_period_seconds": 1200,
+    "patrol_scan_period_seconds": 30,
+    "note": "Tuning values are reversible test defaults, not user-design locks."
+  },
+  "safety": {
+    "automatic_hq_relocation": false,
+    "completed_station_deconstruction": false,
+    "free_ordinary_ships": false,
+    "faction_fabrication": false,
+    "runtime_proven": false
+  },
+  "turrets": {
+    "osaka": {
+      "l_meson": 1,
+      "l_proton": 2,
+      "m_proton": 10
+    },
+    "syn": {
+      "l_meson": 4,
+      "l_proton": 4,
+      "m_proton": 4
+    },
+    "asgard": {
+      "l_meson": 8,
+      "l_proton": 8,
+      "m_proton": 6
+    },
+    "tokyo": {
+      "m_meson": 28
+    },
+    "honshu": {
+      "m_meson": 14
+    }
+  }
+}

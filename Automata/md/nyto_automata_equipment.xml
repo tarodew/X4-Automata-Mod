@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Equipment">
+  <cues>
+    <library name="Initialize" purpose="run_actions">
+      <params/>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$S.$roles" exact="table[]"/>
+        <set_value name="$S.$roles.$nimcha" exact="table[$macro = macro.ship_ter_s_scout_02_a_macro, $job = 'nyto_auto_ticket_nimcha', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$takoba" exact="table[$macro = macro.ship_ter_s_fighter_03_a_macro, $job = 'nyto_auto_ticket_takoba', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$gladius" exact="table[$macro = macro.ship_ter_s_heavyfighter_01_a_macro, $job = 'nyto_auto_ticket_gladius', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$rapier" exact="table[$macro = macro.ship_ter_s_scout_01_a_macro, $job = 'nyto_auto_ticket_rapier', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$jian" exact="table[$macro = macro.ship_ter_m_gunboat_01_a_macro, $job = 'nyto_auto_ticket_jian', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$osaka" exact="table[$macro = macro.ship_ter_l_destroyer_01_a_macro, $job = 'nyto_auto_ticket_osaka', $required = [ware.engine_ter_l_allround_01_mk1, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_l_allround_01_mk3, ware.turret_ter_l_beam_01_mk1, ware.turret_ter_l_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.weapon_ter_l_destroyer_01_mk1], $fixed = true]"/>
+        <set_value name="$S.$roles.$osaka_travel" exact="table[$macro = macro.ship_ter_l_destroyer_01_a_macro, $job = 'nyto_auto_ticket_osaka_travel', $required = [ware.engine_ter_l_travel_01_mk1, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_l_allround_01_mk3, ware.turret_ter_l_beam_01_mk1, ware.turret_ter_l_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.weapon_ter_l_destroyer_01_mk1], $fixed = true]"/>
+        <set_value name="$S.$roles.$syn" exact="table[$macro = macro.ship_atf_l_destroyer_01_a_macro, $job = 'nyto_auto_ticket_syn', $required = [ware.engine_ter_l_allround_01_mk1, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_l_allround_01_mk3, ware.turret_ter_l_beam_01_mk1, ware.turret_ter_l_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.weapon_ter_l_destroyer_01_mk1], $fixed = true]"/>
+        <set_value name="$S.$roles.$asgard" exact="table[$macro = macro.ship_atf_xl_battleship_01_a_macro, $job = 'nyto_auto_ticket_asgard', $required = [ware.engine_ter_xl_allround_01_mk1, ware.shield_ter_m_standard_01_mk2, ware.shield_ter_xl_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_xl_allround_01_mk3, ware.turret_ter_l_beam_01_mk1, ware.turret_ter_l_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.weapon_atf_xl_battleship_01_mk1, ware.weapon_ter_l_destroyer_01_mk1], $fixed = true]"/>
+        <set_value name="$S.$roles.$tokyo" exact="table[$macro = macro.ship_ter_xl_carrier_01_a_macro, $job = 'nyto_auto_ticket_tokyo', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$honshu" exact="table[$macro = macro.ship_ter_xl_resupplier_01_a_macro, $job = 'nyto_auto_ticket_honshu', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$builder" exact="table[$macro = macro.ship_ter_xl_builder_01_a_macro, $job = 'nyto_auto_ticket_builder', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$miner_solid_m" exact="table[$macro = macro.ship_ter_m_miner_solid_01_a_macro, $job = 'nyto_auto_ticket_miner_solid_m', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$miner_liquid_m" exact="table[$macro = macro.ship_ter_m_miner_liquid_01_a_macro, $job = 'nyto_auto_ticket_miner_liquid_m', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$miner_solid_l" exact="table[$macro = macro.ship_ter_l_miner_solid_01_a_macro, $job = 'nyto_auto_ticket_miner_solid_l', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$miner_liquid_l" exact="table[$macro = macro.ship_ter_l_miner_liquid_01_a_macro, $job = 'nyto_auto_ticket_miner_liquid_l', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$trader_m" exact="table[$macro = macro.ship_ter_m_trans_container_01_a_macro, $job = 'nyto_auto_ticket_trader_m', $required = [], $fixed = false]"/>
+        <set_value name="$S.$roles.$trader_l" exact="table[$macro = macro.ship_ter_l_trans_container_01_a_macro, $job = 'nyto_auto_ticket_trader_l', $required = [], $fixed = false]"/>
+      </actions>
+    </library>
+  </cues>
+</mdscript>

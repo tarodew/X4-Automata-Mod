@@ -1,0 +1,193 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Clusters">
+  <cues>
+    <cue name="Tick" instantiate="true">
+      <conditions>
+        <event_cue_signalled cue="md.Nyto_Automata_State.Pulse"/>
+      </conditions>
+      <actions>
+        <do_if value="global.$nyto_automata.$settings.$enabled and player.age ge global.$nyto_automata.$last_core + 2min">
+          <set_value name="global.$nyto_automata.$last_core" exact="player.age"/>
+          <run_actions ref="Reconcile"/>
+        </do_if>
+      </actions>
+    </cue>
+    <library name="Reconcile" purpose="run_actions">
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_all exact="$S.$sectors.count" counter="$i">
+          <set_value name="$R" exact="$S.$sectors.{$i}"/>
+          <do_if value="$R.$sector.exists and not @$R.$cluster">
+            <set_value name="$C" exact="null"/>
+            <do_all exact="$S.$clusters.count" counter="$j">
+              <set_value name="$Candidate" exact="$S.$clusters.{$j}"/>
+              <do_if value="not $C and $Candidate.$members.count lt 4 and not $R.$is_arsenal and not $Candidate.$is_arsenal">
+                <do_all exact="$Candidate.$members.count" counter="$k">
+                  <set_value name="$Other" exact="$Candidate.$members.{$k}.$sector"/>
+                  <find_sector_in_range name="$Neighbours" object="$Other" maxdistance="1" multiple="true"/>
+                  <do_if value="$Neighbours.indexof.{$R.$sector}">
+                    <set_value name="$C" exact="$Candidate"/>
+                  </do_if>
+                </do_all>
+              </do_if>
+            </do_all>
+            <do_if value="not $C">
+              <set_value name="$C" exact="table[$key = 'cluster:' + $R.$key, $members = [], $core = null, $ideal = null, $hq = null, $promotion = 'not_selected', $recommended = null, $is_arsenal = $R.$is_arsenal, $created = player.age, $candidates = []]"/>
+              <append_to_list name="$S.$clusters" exact="$C"/>
+            </do_if>
+            <append_to_list name="$C.$members" exact="$R"/>
+            <set_value name="$R.$cluster" exact="$C"/>
+          </do_if>
+          <do_if value="@$R.$admin.isoperational and $R.$sector.owner == faction.yorha">
+            <set_value name="$R.$status" exact="'claimed'"/>
+          </do_if>
+        </do_all>
+        <do_all exact="$S.$clusters.count" counter="$i">
+          <set_value name="$C" exact="$S.$clusters.{$i}"/>
+          <run_actions ref="SelectCore">
+            <param name="C" value="$C"/>
+          </run_actions>
+          <do_if value="$S.$settings.$hq_promotion and ($C.$members.count ge 2 or $C.$is_arsenal)">
+            <run_actions ref="Promote">
+              <param name="C" value="$C"/>
+            </run_actions>
+          </do_if>
+        </do_all>
+      </actions>
+    </library>
+    <library name="SelectCore" purpose="run_actions">
+      <params>
+        <param name="C"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Candidates" exact="[]"/>
+        <do_all exact="$C.$members.count" counter="$i">
+          <find_sector_in_range name="$Near" object="$C.$members.{$i}.$sector" maxdistance="1" multiple="true"/>
+          <do_all exact="$Near.count" counter="$j">
+            <do_if value="not $Candidates.indexof.{$Near.{$j}} and $Near.{$j}.owner != faction.player">
+              <append_to_list name="$Candidates" exact="$Near.{$j}"/>
+            </do_if>
+          </do_all>
+        </do_all>
+        <set_value name="$BestIdeal" exact="null"/>
+        <set_value name="$BestUsable" exact="null"/>
+        <set_value name="$IdealScore" exact="-1000000"/>
+        <set_value name="$UsableScore" exact="-1000000"/>
+        <set_value name="$C.$candidates" exact="[]"/>
+        <do_all exact="$Candidates.count" counter="$i">
+          <set_value name="$Candidate" exact="$Candidates.{$i}"/>
+          <find_sector_in_range name="$Reach" distances="$Distances" object="$Candidate" maxdistance="12" multiple="true"/>
+          <set_value name="$Total" exact="0"/>
+          <set_value name="$Worst" exact="0"/>
+          <set_value name="$Unreachable" exact="false"/>
+          <do_all exact="$C.$members.count" counter="$j">
+            <set_value name="$Member" exact="$C.$members.{$j}.$sector"/>
+            <do_if value="$Distances.{$Member}?">
+              <set_value name="$D" exact="$Distances.{$Member}"/>
+            </do_if>
+            <do_else>
+              <set_value name="$D" exact="1000"/>
+              <set_value name="$Unreachable" exact="true"/>
+            </do_else>
+            <set_value name="$Total" operation="add" exact="$D"/>
+            <set_value name="$Worst" exact="[$Worst, $D].max"/>
+          </do_all>
+          <set_value name="$Score" exact="10000 - $Worst * 1000 - $Total * 100 + @$S.$core_bias.{$Candidate.macro.id}"/>
+          <do_if value="$Candidate == @$C.$core">
+            <set_value name="$Score" operation="add" exact="250"/>
+          </do_if>
+          <set_value name="$Record" exact="@$S.$sector_index.{$Candidate.macro.id}"/>
+          <set_value name="$Usable" exact="$Candidate.owner == faction.yorha and @$Record.$admin.isoperational and not $Unreachable"/>
+          <append_to_list name="$C.$candidates" exact="table[$sector = $Candidate, $score = $Score, $usable = $Usable, $worst_jumps = $Worst, $total_jumps = $Total, $owner = $Candidate.owner]"/>
+          <do_if value="not $Unreachable and $Score gt $IdealScore">
+            <set_value name="$IdealScore" exact="$Score"/>
+            <set_value name="$BestIdeal" exact="$Candidate"/>
+          </do_if>
+          <do_if value="$Usable and $Score gt $UsableScore">
+            <set_value name="$UsableScore" exact="$Score"/>
+            <set_value name="$BestUsable" exact="$Candidate"/>
+          </do_if>
+        </do_all>
+        <set_value name="$C.$ideal" exact="$BestIdeal"/>
+        <do_if value="@$C.$hq.isoperational">
+          <!-- Recommendations do not destroy or move anything. The Bunker is never changed here. -->
+          <do_if value="$BestUsable and $BestUsable != $C.$core">
+            <set_value name="$C.$recommended" exact="$BestUsable"/>
+          </do_if>
+        </do_if>
+        <do_else>
+          <do_if value="$C.$promotion != 'building'">
+            <set_value name="$C.$core" exact="$BestUsable"/>
+            <set_value name="$C.$promotion" exact="if $BestUsable then 'candidate_ready' else 'waiting_for_lawful_admin'"/>
+          </do_if>
+        </do_else>
+      </actions>
+    </library>
+    <library name="Promote" purpose="run_actions">
+      <params>
+        <param name="C"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="@$C.$hq.isoperational or $C.$promotion == 'building' or not $C.$core">
+          <return value="false"/>
+        </do_if>
+        <set_value name="$R" exact="@$S.$sector_index.{$C.$core.macro.id}"/>
+        <do_if value="not $R or $R.$sector.owner != faction.yorha or not @$R.$admin.isoperational">
+          <return value="false"/>
+        </do_if>
+        <run_actions ref="md.Nyto_Automata_Territory.NewProject" result="$P">
+          <param name="Record" value="$R"/>
+          <param name="Kind" value="'hq_extension'"/>
+          <param name="Ordinal" value="'hq'"/>
+          <param name="Station" value="$R.$admin"/>
+        </run_actions>
+        <set_value name="$P.$cluster" exact="$C"/>
+        <set_value name="$C.$promotion" exact="'building'"/>
+        <run_actions ref="md.Nyto_Automata_Core.Log">
+          <param name="Text" value="'HQ promotion authorized on existing administration station in ' + $R.$sector.knownname"/>
+        </run_actions>
+        <return value="true"/>
+      </actions>
+    </library>
+    <library name="SetArsenal" purpose="run_actions">
+      <params>
+        <param name="Sector"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$arsenal and $S.$arsenal != $Sector">
+          <run_actions ref="md.Nyto_Automata_Core.Log">
+            <param name="Text" value="'Arsenal already designated. Automatic relocation is disabled.'"/>
+          </run_actions>
+          <return value="false"/>
+        </do_if>
+        <do_if value="$Sector.owner != faction.yorha and $Sector.owner != faction.ownerless">
+          <return value="false"/>
+        </do_if>
+        <run_actions ref="md.Nyto_Automata_Territory.Authorize" result="$Accepted">
+          <param name="Sector" value="$Sector"/>
+        </run_actions>
+        <do_if value="not $Accepted">
+          <return value="false"/>
+        </do_if>
+        <set_value name="$R" exact="$S.$sector_index.{$Sector.macro.id}"/>
+        <do_if value="@$R.$cluster and $R.$cluster.$members.count gt 1">
+          <set_value name="$R.$blocker" exact="'ARSENAL_NEEDS_OWN_CLUSTER_REVIEW'"/>
+          <return value="false"/>
+        </do_if>
+        <set_value name="$S.$arsenal" exact="$Sector"/>
+        <set_value name="$R.$is_arsenal" exact="true"/>
+        <do_if value="@$R.$cluster">
+          <set_value name="$R.$cluster.$is_arsenal" exact="true"/>
+        </do_if>
+        <run_actions ref="Reconcile"/>
+        <run_actions ref="md.Nyto_Automata_Core.Log">
+          <param name="Text" value="'Arsenal designated: ' + $Sector.knownname + '. Forty is the maximum, not forty free or automatically invented station designs.'"/>
+        </run_actions>
+        <return value="true"/>
+      </actions>
+    </library>
+  </cues>
+</mdscript>

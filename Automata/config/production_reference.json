@@ -1,0 +1,69 @@
+{
+  "metallicmicrolattice": {
+    "seconds": "180",
+    "output": "190",
+    "inputs_per_hour": {
+      "energycells": 1000.0,
+      "helium": 2600.0,
+      "ore": 1000.0
+    },
+    "source": "libraries/wares.xml selected base05-09 plus Terran ext01-03"
+  },
+  "siliconcarbide": {
+    "seconds": "300",
+    "output": "48",
+    "inputs_per_hour": {
+      "energycells": 2400.0,
+      "metallicmicrolattice": 24.0,
+      "methane": 4800.0,
+      "silicon": 3600.0
+    },
+    "source": "libraries/wares.xml selected base05-09 plus Terran ext01-03"
+  },
+  "computronicsubstrate": {
+    "seconds": "600",
+    "output": "98",
+    "inputs_per_hour": {
+      "energycells": 24000.0,
+      "hydrogen": 12000.0,
+      "ore": 18000.0,
+      "silicon": 18000.0
+    },
+    "source": "libraries/wares.xml selected base05-09 plus Terran ext01-03"
+  },
+  "energycells": {
+    "seconds": "60",
+    "output": "50",
+    "inputs_per_hour": {},
+    "source": "libraries/wares.xml selected base05-09 plus Terran ext01-03"
+  },
+  "proteinpaste": {
+    "seconds": "300",
+    "output": "219",
+    "inputs_per_hour": {
+      "energycells": 960.0,
+      "ice": 960.0,
+      "methane": 2400.0
+    },
+    "source": "libraries/wares.xml selected base05-09 plus Terran ext01-03"
+  },
+  "mre": {
+    "seconds": "240",
+    "output": "175",
+    "inputs_per_hour": {
+      "energycells": 900.0,
+      "proteinpaste": 900.0
+    },
+    "source": "libraries/wares.xml selected base05-09 plus Terran ext01-03"
+  },
+  "medicalsupplies": {
+    "seconds": "300",
+    "output": "140",
+    "inputs_per_hour": {
+      "energycells": 1200.0,
+      "ice": 600.0,
+      "proteinpaste": 288.0
+    },
+    "source": "libraries/wares.xml selected base05-09 plus Terran ext01-03"
+  }
+}

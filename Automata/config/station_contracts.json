@@ -1,0 +1,117 @@
+{
+  "modules": {
+    "dock": "dockarea_ter_m_station_01_hightech_macro",
+    "pier": "pier_ter_harbor_01_macro",
+    "claim": "defence_ter_claim_01_macro",
+    "disc": "defence_ter_disc_01_macro",
+    "tube": "defence_ter_tube_01_macro",
+    "equip_sm": "buildmodule_ter_equip_m_dockarea_01_macro",
+    "equip_l": "buildmodule_ter_equip_l_macro",
+    "equip_xl": "buildmodule_ter_equip_xl_macro",
+    "container_l": "storage_ter_l_container_01_macro",
+    "solid_l": "storage_ter_l_solid_01_macro",
+    "liquid_l": "storage_ter_l_liquid_01_macro",
+    "container_m": "storage_ter_m_container_01_macro",
+    "hab_l": "hab_ter_l_01_macro",
+    "hab_m": "hab_ter_m_01_macro",
+    "micro": "prod_ter_metallicmicrolattice_macro",
+    "sic": "prod_ter_siliconcarbide_macro",
+    "comp": "prod_ter_computronicsubstrate_macro",
+    "solar": "prod_ter_energycells_macro",
+    "paste": "prod_ter_proteinpaste_macro",
+    "mre": "prod_ter_mre_macro",
+    "med": "prod_ter_medicalsupplies_macro"
+  },
+  "blueprints": {
+    "admin": {
+      "dock": 1,
+      "claim": 1,
+      "disc": 1,
+      "container_m": 1,
+      "tube": 1,
+      "pier": 1,
+      "equip_sm": 1
+    },
+    "defence": {
+      "dock": 1,
+      "disc": 4,
+      "tube": 2,
+      "container_m": 1
+    },
+    "micro": {
+      "dock": 1,
+      "pier": 1,
+      "micro": 4,
+      "hab_l": 1,
+      "container_l": 1,
+      "solid_l": 1,
+      "liquid_l": 1
+    },
+    "sic": {
+      "dock": 1,
+      "pier": 1,
+      "sic": 4,
+      "hab_l": 6,
+      "container_l": 1,
+      "solid_l": 1,
+      "liquid_l": 1
+    },
+    "comp": {
+      "dock": 1,
+      "pier": 1,
+      "comp": 4,
+      "hab_l": 4,
+      "container_l": 3,
+      "solid_l": 2,
+      "liquid_l": 1
+    },
+    "solar": {
+      "dock": 1,
+      "pier": 1,
+      "solar": 16,
+      "hab_l": 1,
+      "hab_m": 1,
+      "container_l": 1
+    },
+    "life": {
+      "dock": 1,
+      "pier": 1,
+      "paste": 3,
+      "mre": 6,
+      "med": 9,
+      "hab_l": 4,
+      "hab_m": 1,
+      "container_l": 2,
+      "solid_l": 1,
+      "liquid_l": 1
+    },
+    "hq_extension": {
+      "dock": 2,
+      "pier": 2,
+      "equip_sm": 1,
+      "equip_l": 1,
+      "equip_xl": 1,
+      "container_l": 4,
+      "hab_l": 4,
+      "disc": 4
+    }
+  },
+  "normal_projects": [
+    "admin",
+    "comp",
+    "sic",
+    "micro",
+    "life",
+    "solar",
+    "comp",
+    "sic",
+    "micro",
+    "micro",
+    "micro",
+    "defence",
+    "defence",
+    "defence"
+  ],
+  "geometry": "native asynchronous test layouts; final art deferred",
+  "source": "current CAT hash-verified Terran definitions"
+}

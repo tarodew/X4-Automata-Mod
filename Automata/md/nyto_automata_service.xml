@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Service">
+  <cues>
+    <library name="Ready" purpose="run_actions">
+      <params>
+        <param name="Q"/>
+      </params>
+      <actions>
+        <do_if value="not @$Q.$ship.exists or $Q.$ship.owner != faction.yorha or not $Q.$ship.isoperational">
+          <return value="false"/>
+        </do_if>
+        <do_if value="$Q.$ship.hullpercentage lt 98">
+          <return value="false"/>
+        </do_if>
+        <do_if value="($Q.$role == 'nimcha' or $Q.$role == 'jian') and $Q.$ship.ammostorage.missile.capacity gt 0 and $Q.$ship.ammostorage.missile.count lt $Q.$ship.ammostorage.missile.capacity * 0.75">
+          <return value="false"/>
+        </do_if>
+        <return value="true"/>
+      </actions>
+    </library>
+    <library name="Step" purpose="run_actions">
+      <params>
+        <param name="Q"/>
+        <param name="Preferred" default="null"/>
+      </params>
+      <actions>
+        <do_if value="not @$Q.$ship.exists or $Q.$ship.owner != faction.yorha">
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Ship" exact="$Q.$ship"/>
+        <set_value name="$Need" exact="$Ship.hullpercentage lt 80 or (($Q.$role == 'nimcha' or $Q.$role == 'jian') and $Ship.ammostorage.missile.capacity gt 0 and $Ship.ammostorage.missile.count lt $Ship.ammostorage.missile.capacity * 0.25)"/>
+        <do_if value="$Q.$phase == 'recovering'">
+          <run_actions ref="Ready" result="$Ready">
+            <param name="Q" value="$Q"/>
+          </run_actions>
+          <do_if value="$Ready and not @$Q.$service.exists">
+            <set_value name="$Q.$phase" exact="'ready'"/>
+            <set_value name="$Q.$assigned" exact="false"/>
+            <set_value name="$Q.$applied_epoch" exact="-1"/>
+            <set_value name="$Q.$blocker" exact="''"/>
+            <return value="true"/>
+          </do_if>
+        </do_if>
+        <do_elseif value="not $Need">
+          <return value="$Ship.isoperational"/>
+        </do_elseif>
+        <set_value name="$Q.$phase" exact="'recovering'"/>
+        <do_if value="@$Q.$service.exists">
+          <return value="false"/>
+        </do_if>
+        <do_if value="player.age lt @$Q.$last_service + 2min">
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Destination" exact="$Preferred"/>
+        <do_if value="not @$Destination.isoperational or $Destination.owner != faction.yorha">
+          <set_value name="$Destination" exact="$Q.$home"/>
+        </do_if>
+        <do_if value="not @$Destination.isoperational or $Destination.owner != faction.yorha">
+          <run_actions ref="md.Nyto_Automata_Core.ServiceHome" result="$Destination">
+            <param name="Sector" value="$Ship.sector"/>
+          </run_actions>
+        </do_if>
+        <do_if value="not @$Destination.isoperational">
+          <set_value name="$Q.$blocker" exact="'NO_OPERATIONAL_SERVICE_HOME'"/>
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Q.$last_service" exact="player.age"/>
+        <!-- Native Resupply checks actual service compatibility and wares. It cannot create replacement subordinates. -->
+        <create_order object="$Ship" id="'Resupply'" name="$Q.$service" priority="true">
+          <param name="param_station" value="$Destination"/>
+          <param name="repair" value="true"/>
+          <param name="hullpercent" value="100"/>
+          <param name="repairall" value="true"/>
+          <param name="resupply_ammo" value="true"/>
+          <param name="resupply_units" value="true"/>
+          <param name="restock_subordinates" value="false"/>
+          <param name="onlyuseresupplierships" value="false"/>
+          <param name="urgent" value="false"/>
+        </create_order>
+        <set_value name="$Q.$blocker" exact="'NATIVE_SERVICE_PENDING'"/>
+        <return value="false"/>
+      </actions>
+    </library>
+    <library name="SwapNimcha" purpose="run_actions">
+      <params>
+        <param name="Q"/>
+        <param name="Pool"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$Q.$role != 'nimcha'">
+          <return value="false"/>
+        </do_if>
+        <set_value name="$R" exact="null"/>
+        <do_all exact="$Pool.count" counter="$i">
+          <set_value name="$Candidate" exact="$Pool.{$i}"/>
+          <do_if value="not $R and not @$Candidate.$loan and not @$Candidate.$pending_return.exists">
+            <run_actions ref="Ready" result="$OK">
+              <param name="Q" value="$Candidate"/>
+            </run_actions>
+            <do_if value="$OK and $Candidate.$phase != 'recovering'">
+              <set_value name="$R" exact="$Candidate"/>
+            </do_if>
+          </do_if>
+        </do_all>
+        <do_if value="not $R">
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Old" exact="$Q.$ship"/>
+        <set_value name="$Q.$ship" exact="$R.$ship"/>
+        <set_value name="$Q.$phase" exact="'ready'"/>
+        <set_value name="$Q.$assigned" exact="false"/>
+        <set_value name="$Q.$applied_epoch" exact="-1"/>
+        <set_value name="$Q.$blocker" exact="''"/>
+        <set_value name="$Q.$ship.$nyto_automata_slot" exact="$Q.$key"/>
+        <set_value name="$R.$ship" exact="null"/>
+        <set_value name="$R.$assigned" exact="false"/>
+        <set_value name="$R.$phase" exact="'deficit'"/>
+        <do_if value="@$Old.exists and $Old.owner == faction.yorha">
+          <set_value name="$R.$pending_return" exact="$Old"/>
+          <remove_object_commander object="$Old"/>
+          <create_order object="$Old" id="'Wait'" default="true"/>
+          <append_to_list name="$S.$repair_pool" exact="table[$key = $R.$key + ':repair', $ship = $Old, $role = 'nimcha', $home = $R.$home, $phase = 'recovering', $reserve_slot = $R, $service = @$Q.$service]"/>
+        </do_if>
+        <set_value name="$Q.$service" exact="null"/>
+        <return value="true"/>
+      </actions>
+    </library>
+    <cue name="Tick" instantiate="true">
+      <conditions>
+        <event_cue_signalled cue="md.Nyto_Automata_State.Pulse"/>
+      </conditions>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$settings.$enabled">
+          <do_all exact="$S.$repair_pool.count" counter="$i" reverse="true">
+            <set_value name="$Q" exact="$S.$repair_pool.{$i}"/>
+            <do_if value="not @$Q.$ship.exists or $Q.$ship.owner != faction.yorha">
+              <do_if value="@$Q.$reserve_slot">
+                <set_value name="$Q.$reserve_slot.$pending_return" exact="null"/>
+              </do_if>
+              <remove_value name="$S.$repair_pool.{$i}"/>
+            </do_if>
+            <do_else>
+              <run_actions ref="Step" result="$OK">
+                <param name="Q" value="$Q"/>
+              </run_actions>
+              <do_if value="$OK and @$Q.$reserve_slot and not @$Q.$reserve_slot.$ship.exists">
+                <set_value name="$R" exact="$Q.$reserve_slot"/>
+                <set_value name="$R.$ship" exact="$Q.$ship"/>
+                <set_value name="$R.$pending_return" exact="null"/>
+                <set_value name="$R.$phase" exact="'ready'"/>
+                <set_value name="$R.$assigned" exact="false"/>
+                <set_value name="$R.$ship.$nyto_automata_slot" exact="$R.$key"/>
+                <remove_value name="$S.$repair_pool.{$i}"/>
+              </do_if>
+            </do_else>
+          </do_all>
+        </do_if>
+      </actions>
+    </cue>
+  </cues>
+</mdscript>

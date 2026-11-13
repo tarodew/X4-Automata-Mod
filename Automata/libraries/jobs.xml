@@ -1,0 +1,346 @@
+<?xml version='1.0' encoding='utf-8'?>
+<diff>
+  <add sel="/jobs">
+    <job id="nyto_auto_ticket_nimcha" name="YoRHa nimcha" startactive="true">
+      <category faction="yorha" size="ship_s" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_s_scout_02_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_s_travel_01_mk3, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk3, ware.shield_ter_m_standard_02_mk3, ware.shield_ter_s_standard_01_mk3, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_s_allround_01_mk3, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.weapon_gen_s_guided_02_mk1, ware.weapon_ter_s_gatling_01_mk2]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+        <ammo>
+          <macro ref="missile_gen_s_smart_01_mk1_macro">
+            <fillpercent exact="100"/>
+          </macro>
+        </ammo>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_takoba" name="YoRHa takoba" startactive="true">
+      <category faction="yorha" size="ship_s" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_s_fighter_03_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_s_allround_01_mk3, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk3, ware.shield_ter_m_standard_02_mk3, ware.shield_ter_s_standard_01_mk3, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_s_allround_01_mk3, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.weapon_ter_s_gatling_01_mk2]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_gladius" name="YoRHa gladius" startactive="true">
+      <category faction="yorha" size="ship_s" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_s_heavyfighter_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_s_allround_01_mk3, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk3, ware.shield_ter_m_standard_02_mk3, ware.shield_ter_s_standard_01_mk3, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_s_allround_01_mk3, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.weapon_ter_s_gatling_01_mk2]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_rapier" name="YoRHa rapier" startactive="true">
+      <category faction="yorha" size="ship_s" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_s_scout_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_s_travel_01_mk3, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk3, ware.shield_ter_m_standard_02_mk3, ware.shield_ter_s_standard_01_mk3, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_s_allround_01_mk3, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_jian" name="YoRHa jian" startactive="true">
+      <category faction="yorha" size="ship_m" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_m_gunboat_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_m_allround_01_mk3, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk3, ware.shield_ter_m_standard_02_mk3, ware.shield_ter_s_standard_01_mk3, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_m_allround_01_mk3, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.weapon_gen_m_guided_02_mk1, ware.weapon_ter_m_gatling_01_mk2]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+        <ammo>
+          <macro ref="missile_gen_s_smart_01_mk1_macro">
+            <fillpercent exact="100"/>
+          </macro>
+        </ammo>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_osaka" name="YoRHa osaka" startactive="true">
+      <category faction="yorha" size="ship_l" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_l_destroyer_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout ref="'nyto_auto_loadout_osaka'"/>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_osaka_travel" name="YoRHa osaka_travel" startactive="true">
+      <category faction="yorha" size="ship_l" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_l_destroyer_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout ref="'nyto_auto_loadout_osaka_travel'"/>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_syn" name="YoRHa syn" startactive="true">
+      <category faction="yorha" size="ship_l" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_atf_l_destroyer_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout ref="'nyto_auto_loadout_syn'"/>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_asgard" name="YoRHa asgard" startactive="true">
+      <category faction="yorha" size="ship_xl" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_atf_xl_battleship_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout ref="'nyto_auto_loadout_asgard'"/>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_tokyo" name="YoRHa tokyo" startactive="true">
+      <category faction="yorha" size="ship_xl" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_xl_carrier_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_xl_allround_01_mk1, ware.shield_ter_m_standard_01_mk2, ware.shield_ter_m_standard_02_mk2, ware.shield_ter_xl_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_xl_allround_01_mk3, ware.turret_ter_m_beam_01_mk1, ware.turret_ter_m_beam_02_mk1]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_honshu" name="YoRHa honshu" startactive="true">
+      <category faction="yorha" size="ship_xl" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_xl_resupplier_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_xl_allround_01_mk1, ware.shield_ter_m_standard_01_mk2, ware.shield_ter_m_standard_02_mk2, ware.shield_ter_xl_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_xl_allround_01_mk3, ware.turret_ter_m_beam_01_mk1, ware.turret_ter_m_beam_02_mk1]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+        <units>
+          <unit category="transport" mk="1" exact="10"/>
+        </units>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_builder" name="YoRHa builder" startactive="true">
+      <category faction="yorha" size="ship_xl" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_xl_builder_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_xl_allround_01_mk1, ware.shield_ter_m_standard_01_mk2, ware.shield_ter_m_standard_02_mk2, ware.shield_ter_xl_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_xl_allround_01_mk3, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+        <units>
+          <unit category="build" mk="1" exact="60"/>
+        </units>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_miner_solid_m" name="YoRHa miner_solid_m" startactive="true">
+      <category faction="yorha" size="ship_m" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_m_miner_solid_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_m_allround_01_mk3, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk3, ware.shield_ter_m_standard_02_mk3, ware.shield_ter_s_standard_01_mk3, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_m_allround_01_mk3, ware.turret_ter_l_mining_01_mk1, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.turret_ter_m_mining_01_mk1, ware.turret_ter_m_mining_02_mk1, ware.weapon_gen_m_mining_01_mk1, ware.weapon_gen_m_mining_01_mk2, ware.weapon_gen_s_mining_01_mk1, ware.weapon_gen_s_mining_01_mk2]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+        <units>
+          <unit category="transport" mk="1" exact="10"/>
+        </units>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_miner_liquid_m" name="YoRHa miner_liquid_m" startactive="true">
+      <category faction="yorha" size="ship_m" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_m_miner_liquid_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_m_allround_01_mk3, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk3, ware.shield_ter_m_standard_02_mk3, ware.shield_ter_s_standard_01_mk3, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_m_allround_01_mk3, ware.turret_ter_l_mining_01_mk1, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.turret_ter_m_mining_01_mk1, ware.turret_ter_m_mining_02_mk1, ware.weapon_gen_m_mining_01_mk1, ware.weapon_gen_m_mining_01_mk2, ware.weapon_gen_s_mining_01_mk1, ware.weapon_gen_s_mining_01_mk2]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+        <units>
+          <unit category="transport" mk="1" exact="10"/>
+        </units>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_miner_solid_l" name="YoRHa miner_solid_l" startactive="true">
+      <category faction="yorha" size="ship_l" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_l_miner_solid_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_l_allround_01_mk1, ware.shield_ter_m_standard_01_mk2, ware.shield_ter_m_standard_02_mk2, ware.shield_ter_xl_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_l_allround_01_mk3, ware.turret_ter_l_mining_01_mk1, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.turret_ter_m_mining_01_mk1, ware.turret_ter_m_mining_02_mk1, ware.weapon_gen_m_mining_01_mk1, ware.weapon_gen_m_mining_01_mk2, ware.weapon_gen_s_mining_01_mk1, ware.weapon_gen_s_mining_01_mk2]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+        <units>
+          <unit category="transport" mk="1" exact="10"/>
+          <unit category="orecollect" mk="1" exact="10"/>
+        </units>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_miner_liquid_l" name="YoRHa miner_liquid_l" startactive="true">
+      <category faction="yorha" size="ship_l" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_l_miner_liquid_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_l_allround_01_mk1, ware.shield_ter_m_standard_01_mk2, ware.shield_ter_m_standard_02_mk2, ware.shield_ter_xl_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_l_allround_01_mk3, ware.turret_ter_l_mining_01_mk1, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1, ware.turret_ter_m_mining_01_mk1, ware.turret_ter_m_mining_02_mk1, ware.weapon_gen_m_mining_01_mk1, ware.weapon_gen_m_mining_01_mk2, ware.weapon_gen_s_mining_01_mk1, ware.weapon_gen_s_mining_01_mk2]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+        <units>
+          <unit category="transport" mk="1" exact="10"/>
+        </units>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_trader_m" name="YoRHa trader_m" startactive="true">
+      <category faction="yorha" size="ship_m" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_m_trans_container_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_m_travel_01_mk3, ware.shield_ter_l_standard_01_mk3, ware.shield_ter_m_standard_01_mk3, ware.shield_ter_m_standard_02_mk3, ware.shield_ter_s_standard_01_mk3, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_m_allround_01_mk3, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+      </ship>
+    </job>
+    <job id="nyto_auto_ticket_trader_l" name="YoRHa trader_l" startactive="true">
+      <category faction="yorha" size="ship_l" tags="[nyto_automata]"/>
+      <order id="Wait" default="true"/>
+      <quota galaxy="0"/>
+      <location class="galaxy" macro="xu_ep2_universe_macro"/>
+      <environment buildatshipyard="true" preferbuilding="true"/>
+      <modifiers rebuild="false"/>
+      <ship macro="ship_ter_l_trans_container_01_a_macro">
+        <owner exact="yorha"/>
+        <pilot>
+          <select faction="yorha" tags="[aipilot]"/>
+        </pilot>
+        <loadout wares="[ware.engine_ter_l_travel_01_mk1, ware.shield_ter_m_standard_01_mk2, ware.shield_ter_m_standard_02_mk2, ware.shield_ter_xl_standard_01_mk2, ware.software_flightassistmk1, ware.software_scannerlongrangemk2, ware.software_scannerobjectmk2, ware.software_targetmk1, ware.software_trademk1, ware.thruster_gen_l_allround_01_mk3, ware.turret_ter_m_gatling_01_mk1, ware.turret_ter_m_gatling_02_mk1]">
+          <level exact="1.0" faction="faction.terran"/>
+          <variation exact="0"/>
+        </loadout>
+      </ship>
+    </job>
+  </add>
+</diff>

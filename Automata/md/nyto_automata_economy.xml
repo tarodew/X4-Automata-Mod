@@ -1,0 +1,246 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Economy">
+  <cues>
+    <library name="Initialize" purpose="run_actions">
+      <params/>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$S.$production_inputs" exact="table[]"/>
+        <set_value name="$S.$production_inputs.{macro.prod_ter_metallicmicrolattice_macro}" exact="table[{ware.energycells} = 1000.0, {ware.helium} = 2600.0, {ware.ore} = 1000.0]"/>
+        <set_value name="$S.$production_inputs.{macro.prod_ter_siliconcarbide_macro}" exact="table[{ware.energycells} = 2400.0, {ware.metallicmicrolattice} = 24.0, {ware.methane} = 4800.0, {ware.silicon} = 3600.0]"/>
+        <set_value name="$S.$production_inputs.{macro.prod_ter_computronicsubstrate_macro}" exact="table[{ware.energycells} = 24000.0, {ware.hydrogen} = 12000.0, {ware.ore} = 18000.0, {ware.silicon} = 18000.0]"/>
+        <set_value name="$S.$production_inputs.{macro.prod_ter_energycells_macro}" exact="table[]"/>
+        <set_value name="$S.$production_inputs.{macro.prod_ter_proteinpaste_macro}" exact="table[{ware.energycells} = 960.0, {ware.ice} = 960.0, {ware.methane} = 2400.0]"/>
+        <set_value name="$S.$production_inputs.{macro.prod_ter_mre_macro}" exact="table[{ware.energycells} = 900.0, {ware.proteinpaste} = 900.0]"/>
+        <set_value name="$S.$production_inputs.{macro.prod_ter_medicalsupplies_macro}" exact="table[{ware.energycells} = 1200.0, {ware.ice} = 600.0, {ware.proteinpaste} = 288.0]"/>
+      </actions>
+    </library>
+    <cue name="Tick" instantiate="true">
+      <conditions>
+        <event_cue_signalled cue="md.Nyto_Automata_State.Pulse"/>
+      </conditions>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$settings.$enabled">
+          <do_if value="$S.$settings.$procurement">
+            <run_actions ref="Builders"/>
+          </do_if>
+          <do_if value="$S.$settings.$economy and player.age ge $S.$last_economy + 2min">
+            <set_value name="$S.$last_economy" exact="player.age"/>
+            <do_if value="not $S.$production_inputs?">
+              <run_actions ref="Initialize"/>
+            </do_if>
+            <do_all exact="$S.$projects.count" counter="$i">
+              <run_actions ref="Station">
+                <param name="P" value="$S.$projects.{$i}"/>
+              </run_actions>
+            </do_all>
+          </do_if>
+        </do_if>
+      </actions>
+    </cue>
+    <library name="Builders" purpose="run_actions">
+      <params/>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not @$S.$bunker.exists or not $S.$roles?">
+          <return/>
+        </do_if>
+        <!-- The ceiling is 14, not a founding grant. Real queues build every missing builder. -->
+        <do_all exact="14" counter="$i">
+          <run_actions ref="md.Nyto_Automata_Procurement.EnsureSlot" result="$Q">
+            <param name="Key" value="'builder:' + $i"/>
+            <param name="Role" value="'builder'"/>
+            <param name="Home" value="$S.$bunker"/>
+          </run_actions>
+          <do_if value="$i == 1 and @$S.$founding_builder.exists and not @$S.$founding_builder.$nyto_automata_slot">
+            <set_value name="$Q.$ship" exact="$S.$founding_builder"/>
+            <set_value name="$Q.$phase" exact="'ready'"/>
+            <set_value name="$Q.$ship.$nyto_automata_slot" exact="$Q.$key"/>
+          </do_if>
+        </do_all>
+      </actions>
+    </library>
+    <library name="Station" purpose="run_actions">
+      <params>
+        <param name="P"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not @$P.$station.exists or $P.$station.owner != faction.yorha">
+          <return/>
+        </do_if>
+        <set_value name="$St" exact="$P.$station"/>
+        <do_if value="$P.$kind == 'hq_extension'">
+          <return/>
+        </do_if>
+        <!-- The empty shell has native build storage. Supply its real buy orders while the admin is still unfinished. -->
+        <do_if value="$P.$phase != 'operational' and $P.$phase != 'lost'">
+          <do_all exact="2" counter="$i">
+            <run_actions ref="TradeSlot">
+              <param name="Key" value="$P.$key + ':construction_trade:' + $i"/>
+              <param name="Station" value="$St.buildstorage"/>
+              <param name="Wares" value="[ware.energycells, ware.computronicsubstrate, ware.siliconcarbide]"/>
+            </run_actions>
+          </do_all>
+        </do_if>
+        <do_if value="not $St.isoperational">
+          <return/>
+        </do_if>
+        <do_if value="not @$P.$manager_initialized">
+          <signal_objects object="$St" param="'init station'"/>
+          <set_value name="$P.$manager_initialized" exact="true"/>
+        </do_if>
+        <set_value name="$Demand" exact="table[]"/>
+        <do_for_each name="$Macro" in="$S.$production_inputs.keys.list">
+          <find_object_component name="$Modules" object="$St" macro="$Macro" multiple="true"/>
+          <set_value name="$N" exact="0"/>
+          <do_all exact="$Modules.count" counter="$m">
+            <do_if value="$Modules.{$m}.isoperational">
+              <set_value name="$N" operation="add" exact="1"/>
+            </do_if>
+          </do_all>
+          <do_for_each name="$Ware" in="$S.$production_inputs.{$Macro}.keys.list">
+            <set_value name="$Demand.{$Ware}" exact="@$Demand.{$Ware} + $N * $S.$production_inputs.{$Macro}.{$Ware}"/>
+          </do_for_each>
+        </do_for_each>
+        <set_value name="$P.$input_demand" exact="$Demand"/>
+        <set_value name="$ContainerVolume" exact="0"/>
+        <do_for_each name="$Ware" in="$Demand.keys.list">
+          <do_if value="$Ware == ware.ore or $Ware == ware.silicon or $Ware == ware.ice or $Ware == ware.hydrogen or $Ware == ware.helium or $Ware == ware.methane">
+            <run_actions ref="MiningCapacity">
+              <param name="P" value="$P"/>
+              <param name="Ware" value="$Ware"/>
+              <param name="Rate" value="$Demand.{$Ware}"/>
+            </run_actions>
+          </do_if>
+          <do_else>
+            <set_value name="$ContainerVolume" operation="add" exact="$Demand.{$Ware} * $Ware.volume"/>
+          </do_else>
+        </do_for_each>
+        <!-- Traffic capacity is an initial sizing estimate, updated from live ship hold sizes. No money treasury is simulated. -->
+        <set_value name="$Capacity" exact="7400"/>
+        <set_value name="$N" exact="1"/>
+        <set_value name="$Remaining" exact="$ContainerVolume * 0.5 * 1.15 - $Capacity"/>
+        <do_while value="$Remaining gt 0">
+          <set_value name="$N" operation="add" exact="1"/>
+          <set_value name="$Remaining" operation="subtract" exact="$Capacity"/>
+        </do_while>
+        <set_value name="$Wares" exact="$St.resources.list"/>
+        <append_list_elements name="$Wares" other="$St.products.list"/>
+        <append_list_elements name="$Wares" other="$St.supplyresources.list"/>
+        <do_all exact="$N" counter="$i">
+          <run_actions ref="TradeSlot">
+            <param name="Key" value="$P.$key + ':trade:' + $i"/>
+            <param name="Station" value="$St"/>
+            <param name="Wares" value="$Wares"/>
+          </run_actions>
+        </do_all>
+      </actions>
+    </library>
+    <library name="TradeSlot" purpose="run_actions">
+      <params>
+        <param name="Key"/>
+        <param name="Station"/>
+        <param name="Wares"/>
+      </params>
+      <actions>
+        <do_if value="not $Station.exists">
+          <return/>
+        </do_if>
+        <run_actions ref="md.Nyto_Automata_Procurement.EnsureSlot" result="$Q">
+          <param name="Key" value="$Key"/>
+          <param name="Role" value="'trader_m'"/>
+          <param name="Home" value="$Station"/>
+          <param name="Group" value="'economy'"/>
+        </run_actions>
+        <do_if value="@$Q.$ship.isoperational and not @$Q.$loan and $Q.$phase != 'recovering'">
+          <do_if value="$Q.$ship.commander != $Station">
+            <set_object_commander object="$Q.$ship" commander="$Station" assignment="assignment.trading" informfleetmanager="false"/>
+          </do_if>
+          <do_if value="not @$Q.$assigned or $Q.$ship.defaultorder.id != 'TradeRoutine'">
+            <create_order object="$Q.$ship" id="'TradeRoutine'" default="true">
+              <param name="warebasket" value="$Wares"/>
+              <param name="range" value="$Station.sector"/>
+              <param name="maxbuy" value="5"/>
+              <param name="maxsell" value="5"/>
+            </create_order>
+            <set_value name="$Q.$assigned" exact="true"/>
+          </do_if>
+        </do_if>
+      </actions>
+    </library>
+    <library name="MiningCapacity" purpose="run_actions">
+      <params>
+        <param name="P"/>
+        <param name="Ware"/>
+        <param name="Rate"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Key" exact="$P.$key + ':mining:' + $Ware.id"/>
+        <do_if value="not $S.$economy_records.{$Key}?">
+          <set_value name="$S.$economy_records.{$Key}" exact="table[$roundtrip = 1800s, $payload = 0, $deliveries = 0, $last_adapt = player.age, $shortfall = 0, $slots = []]"/>
+        </do_if>
+        <set_value name="$E" exact="$S.$economy_records.{$Key}"/>
+        <set_value name="$Solid" exact="$Ware == ware.ore or $Ware == ware.silicon or $Ware == ware.ice"/>
+        <set_value name="$Capacity" exact="(if $Solid then 8800 else 10000) / $Ware.volume"/>
+        <do_all exact="$E.$slots.count" counter="$i">
+          <set_value name="$Q" exact="$E.$slots.{$i}"/>
+          <do_if value="@$Q.$ship.isoperational">
+            <set_value name="$Capacity" exact="[$Q.$ship.cargo.{$Ware}.max, 1].max"/>
+            <set_value name="$Cargo" exact="$Q.$ship.cargo.{$Ware}.count"/>
+            <do_if value="@$Q.$previous_cargo gt 0 and $Cargo == 0 and $Q.$ship.sector == $P.$sector">
+              <do_if value="@$Q.$last_delivery gt 0s and player.age - $Q.$last_delivery ge 60s">
+                <set_value name="$E.$roundtrip" exact="($E.$roundtrip * 7 + [player.age - $Q.$last_delivery, 2h].min) / 8"/>
+                <set_value name="$E.$deliveries" operation="add" exact="1"/>
+              </do_if>
+              <set_value name="$Q.$last_delivery" exact="player.age"/>
+            </do_if>
+            <set_value name="$Q.$previous_cargo" exact="$Cargo"/>
+          </do_if>
+        </do_all>
+        <set_value name="$E.$payload" exact="$Capacity"/>
+        <set_value name="$Remaining" exact="$Rate * ($E.$roundtrip / 1h) * 1.15"/>
+        <set_value name="$N" exact="0"/>
+        <do_while value="$Remaining gt 0">
+          <set_value name="$N" operation="add" exact="1"/>
+          <set_value name="$Remaining" operation="subtract" exact="$Capacity"/>
+        </do_while>
+        <!-- Underperformance is a request for one extra supplier per observed shortage window, never a free hull. -->
+        <do_if value="player.age ge $E.$last_adapt + 20min">
+          <set_value name="$E.$last_adapt" exact="player.age"/>
+          <do_if value="$E.$deliveries gt 0 and $P.$station.cargo.{$Ware}.count lt $Rate * 0.1">
+            <set_value name="$E.$shortfall" operation="add" exact="1"/>
+          </do_if>
+          <do_elseif value="$P.$station.cargo.{$Ware}.count gt $Rate * 2 and $E.$shortfall gt 0">
+            <set_value name="$E.$shortfall" operation="subtract" exact="1"/>
+          </do_elseif>
+        </do_if>
+        <set_value name="$N" exact="[$N + $E.$shortfall, 1].max"/>
+        <set_value name="$E.$desired" exact="$N"/>
+        <do_all exact="$N" counter="$i">
+          <run_actions ref="md.Nyto_Automata_Procurement.EnsureSlot" result="$Q">
+            <param name="Key" value="$Key + ':' + $i"/>
+            <param name="Role" value="if $Solid then 'miner_solid_m' else 'miner_liquid_m'"/>
+            <param name="Home" value="$P.$station"/>
+            <param name="Group" value="'economy'"/>
+          </run_actions>
+          <do_if value="not $E.$slots.indexof.{$Q}">
+            <append_to_list name="$E.$slots" exact="$Q"/>
+          </do_if>
+          <do_if value="@$Q.$ship.isoperational and not @$Q.$assigned">
+            <set_object_commander object="$Q.$ship" commander="$P.$station" assignment="assignment.trading" informfleetmanager="false"/>
+            <create_order object="$Q.$ship" id="'MiningRoutine'" default="true">
+              <param name="warebasket" value="[$Ware]"/>
+              <param name="range" value="$P.$sector"/>
+              <param name="maxbuy" value="3"/>
+              <param name="maxsell" value="3"/>
+            </create_order>
+            <set_value name="$Q.$assigned" exact="true"/>
+          </do_if>
+        </do_all>
+      </actions>
+    </library>
+  </cues>
+</mdscript>

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Operator">
+  <cues>
+    <cue name="Offer" instantiate="true">
+      <conditions>
+        <event_conversation_started conversation="default"/>
+        <check_value value="global.$nyto_automata?"/>
+        <check_value value="@event.object.owner == faction.yorha or @event.object.owner == faction.player"/>
+      </conditions>
+      <actions>
+        <add_player_choice text="{985700,5}" section="nyto_auto_home" position="top_right"/>
+      </actions>
+    </cue>
+    <cue name="Menu" instantiate="true">
+      <conditions>
+        <event_conversation_next_section section="nyto_auto_home"/>
+      </conditions>
+      <actions>
+        <add_player_choice text="'Write readiness report'" section="nyto_auto_report" position="top_left"/>
+        <add_player_choice_return text="'Back'" position="bottom_right"/>
+      </actions>
+    </cue>
+    <cue name="Report" instantiate="true">
+      <conditions>
+        <event_conversation_next_section section="nyto_auto_report"/>
+      </conditions>
+      <actions>
+        <run_actions ref="md.Nyto_Automata_State.Report"/>
+        <add_player_choice text="'YoRHa Operations'" section="nyto_auto_home"/>
+      </actions>
+    </cue>
+  </cues>
+</mdscript>
