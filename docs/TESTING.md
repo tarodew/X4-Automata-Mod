@@ -2,6 +2,12 @@
 
 Use offline validation for every source change. Group the tests that need the X4 engine into a planned disposable-save session when a bounded or integrated candidate is ready.
 
+## Game files used as test inputs
+
+Use the matching X4 9.0 base files and Terran DLC data when checking schemas, XML patches, equipment mounts and native orders. A fresh extraction is needed only for files missing from the verified source set. Resolve numbered catalogue precedence and relevant DLC diffs for each tested path. Treat older reference extracts as historical until their bytes match the selected current catalogue entry.
+
+The GitHub repository tracks the mod's own code, decisions, and validation evidence. Keep the bulk game files with the external references. See [Build log](BUILD-LOG.md) for the coverage of the existing source harvest.
+
 ## Offline acceptance
 
 | Check | What to verify |

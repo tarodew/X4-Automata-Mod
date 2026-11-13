@@ -40,7 +40,7 @@ Record incident location, protected asset, observed contact, urgency, assigned r
 
 Strategic operations have their own identities and priorities. Construction queues expose site, build storage, Builder, materials, progress and completion. Procurement reports yard and equipment access, material and queue waits, delivery, assignment and verification. The player report should distinguish an accepted directive from a completed result.
 
-## Capital loadout design
+## Equipment decisions
 
 | Hull | Large turrets | Medium turrets |
 | --- | --- | --- |
@@ -50,4 +50,6 @@ Strategic operations have their own identities and priorities. Construction queu
 | Tokyo | — | 28 Meson |
 | Honshu | — | 14 Meson |
 
-A0.4 records explicit current mount maps for Osaka, Syn and Asgard and restricted native loadout generation for support capitals. Exact support-capital equipment, Nimcha and Jian loadouts, and hull-specific launcher compatibility still need source and runtime checks. Use X4 9.0 data for each hull.
+**Recorded in A0.4.** The build log describes explicit Osaka, Syn and Asgard mount maps and restricted native Meson loadout generation for the Tokyo and Honshu. Confirm the exact fitted connections and equipment on delivery.
+
+**Open for validation.** Record the specific engine, shield, thruster, software and ammunition choices as they are verified. Rapid Response Osaka engines should be travel variants. Nimcha, Takoba and Jian weapon choices and dedicated launcher compatibility need current 9.0 evidence per hull. The compendium does not prescribe a separate list of installed ship modification upgrades or bonuses.

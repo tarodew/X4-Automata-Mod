@@ -8,7 +8,7 @@ Automata adds **YoRHa**, a player-sponsored faction for **X4: Foundations 9.0**.
 | --- | --- |
 | [YoRHa design](docs/DESIGN.md) | Faction identity, player diplomacy, cluster cores, expansion and player controls |
 | [Stations and economy](docs/STATIONS-AND-ECONOMY.md) | Station network, founding Builder, paid procurement and regional maintenance |
-| [Fleets and operations](docs/FLEETS-AND-OPERATIONS.md) | Fixed ship establishments, reserves, dispatch, readiness and recovery |
+| [Fleets and operations](docs/FLEETS-AND-OPERATIONS.md) | Ship counts, reserves, capital fits, outstanding equipment decisions and recovery |
 | [Roadmap](docs/ROADMAP.md) | Recovery sequence, A1.0 gates and later ideas |
 | [Build log](docs/BUILD-LOG.md) | Checkpoint history, source provenance and verified limits |
 | [Testing](docs/TESTING.md) | Offline validation and the first disposable-save test session |
