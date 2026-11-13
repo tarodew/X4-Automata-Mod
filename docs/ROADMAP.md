@@ -1,27 +1,29 @@
-# Roadmap to V9.0.0A1.0
+# Automata V9.0.0A1.0 build plan
 
-The first integrated candidate should let YoRHa establish itself, build stations, buy and assign ships, defend holdings, organize clusters, manage fleets, mirror player diplomacy and expand under the documented rules. The candidate is intended for a controlled in-game test.
+A1.0 is one integrated test candidate for X4 9.0 with the Terran DLC. YoRHa should establish its Earth Bunker, buy real ships, build and service stations, protect its holdings, follow persistent player diplomacy and carry a sector operation through to a lawful claim and security handoff. The first successful in-game scenario should exercise those handoffs with a small force. Full fleet scale is a later test of the same candidate.
 
-| Stage | Scope | Evidence at migration |
+The latest recovered baseline is the September 13 A0.5 source. It contains foundation, territory, Core selection, procurement, economy, relation mirror, security, service, fleet templates, reconnaissance and a report-only conversation. Start with the exact recovered source and preserve its provenance. [Build evidence](BUILD-LOG.md)
+
+## Start together, integrate in dependency order
+
+| Workstream | First implementation work | Acceptance before integration |
 | --- | --- | --- |
-| A0.1 Foundation | Identity, Earth Bunker, founding Kyushu, persistent registries | Historical static pass |
-| A0.2 Territory bootstrap | Resource-backed Administration Base, Builder reservation, concurrent infrastructure registration | Historical static pass |
-| A0.3 Cluster Core and High Command | Topology scoring, ideal/usable Core, same-station promotion | Historical static pass and recovered source |
-| A0.4 Economy and procurement | Paid player-yard orders, continuity Builder, real industry, mining/trade and diplomacy | Durable checkpoint and bounded static pass recorded |
-| A0.5 Security and readiness | Nimcha reserves, patrol and police, escort relief, recon, service | Two source archives located. Contents and coverage await audit. |
-| A0.6 Military formations | Regional capital response, heavy defence, Rapid Response, regular and Asgard divisions | Design recorded. Audit A0.5 overlap before implementing. |
-| A0.7 War and expansion | Extend the A0.4 relation mirror into actual war/peace, target selection, claim and handoff | Design recorded. Integrated behavior remains open. |
-| A0.8 Controls and integration | Pause/resume, directives, diagnostics, state reconciliation and basic status view | Earlier control work is reported. Verify the imported source and close remaining gaps. |
-| A1.0 Test candidate | Integrated source, reproducible package, offline report and controlled runtime checklist | No verified package located during migration. |
+| Baseline and shared state | Import the reviewed mod-authored A0.5 files as a baseline commit. Inventory the live MD entry points and settings. Assign one owner for save-state keys, migration, scheduler and shared signals. | One Bunker and founding Builder, schema 2 reload reconciliation, explicitly paused defaults, versioned changes where needed. Old A0.4/A0.5 saves keep their assignments and settings through migration. |
+| Stations, economy and yards | Audit Builder and yard tickets, the one paid Terran continuity Builder, independent station project waits, industry and mining/trade demands, same-station High Command expansion, and Arsenal/front-gate support. Use native build queues and build storage. | A lawful Admin and one industrial project can progress independently. A paid ship order survives interruption and assigns one finished ship to one slot. Sponsor sectors receive no claiming Admin. A blocked yard or project explains why it waits. |
+| Security, readiness and reconnaissance | Audit the recovered Nimcha patrol/police/reserve and Rapier code. Complete incident identity and coverage backfill, civilian rescue and assignment restoration, service, and replacement-before-release for Builder escorts. | One reservation per assigned asset. Local incidents leave strategic relations intact. Relief arrives before an assigned escort is released. Repaired or replaced assets return to the correct slot. |
+| Fleet formations and sustainment | Reconcile the existing templates and equipment contracts with the fleet table. Complete establishment, carrier/auxiliary assignments, regional and faction-wide response, reinforcement, recall and replacement. | Counts and fits match the documented decisions or an explicitly open equipment field. Losses and service reduce readiness without duplicating slots or taking another formation's assets. |
+| Diplomacy, war and territory operations | Use the true-player relation mirror to govern strategic eligibility. Implement operation phases, reassessment on peace or target invalidation, safe-route claim criteria, Core selection and the handoff into construction and security. | Local hostility and disguise never enter the strategic war policy. Allied, neutral and sponsor protections hold. No claim starts against an ineligible sector. Claim completion and security handoff are independently observed. |
+| Operator controls and validation | Expose pause/resume, the founding directive, claim and front priorities, restrictions, and a status report with observable blockers. Build offline checks and packaging while gameplay work proceeds. | Controls go through the same eligibility and reservation rules as autonomous decisions. Reload preserves directives. The packaged extension is deterministic and carries a commit, source/hash provenance and test report. |
 
-## Immediate sequence
+Use one worktree per workstream where branches can proceed independently. Agree on the current persistent state, the meaning of a readiness/reservation record, and the public MD entry points before multiple workstreams change those interfaces. Keep native execution in X4. The integrator owns cross-system changes and combines work incrementally on a single integration branch. Resolve equipment variants from current X4 9.0 base and DLC data as each hull is used. Track the four regular War Divisions as the current working establishment. [Fleet and equipment decisions](FLEETS-AND-OPERATIONS.md)
 
-1. Inspect both A0.5 archives. Hash them and compare against the durable A0.4 source. Inventory the extension and its assets, then import the applicable mod-authored source. Record archive-to-commit provenance and any omitted files.
-2. Reproduce structural and version-matched checks from [Testing](TESTING.md). Verify the actual behavior represented in source. Use one small regression check for each resolved invariant that can be exercised offline.
-3. Close security, fleet, strategic, expansion and control gaps based on the audit. Preserve the defaults and state schema across checkpoints. Keep production of ships and infrastructure resource-backed.
-4. Build a reproducible A1.0 candidate. Record its commit, artifact hash, exact X4/DLC version, offline results and remaining engine-only assertions.
-5. Run the first disposable-save session when authorized. Use the acceptance order in [Testing](TESTING.md).
+## Integration gates
 
-## Later work
+1. **Recover and compare.** Pin the September 13 A0.5 baseline and preserve the three archive hashes. Classify what works at source level, what is only configured and what is missing. Reproduce the baseline structural checks. Screen files for provenance before repository import.
+2. **Prove the handoffs.** Integrate foundation and controls first, then construction and procurement, then security and service, then fleets and strategic operations. At each merge verify ownership, reservations, idempotency, and the effect of pause, failure and retry. Workstream implementation can overlap this sequence.
+3. **Check the whole package with X4 closed.** Run XML, schema, effective diff, source reference, and packaging checks against current game data. Record any missing base/DLC payload by path. Add focused regression checks for pure decision logic and clearly identify simulated scenarios. Build twice and compare ZIP hashes. [Offline test matrix](TESTING.md)
+4. **Deliver V9.0.0A1.0 for a disposable-save session.** Record the source commit, package hash, checks and remaining engine assertions. When runtime testing is authorized, start paused, verify the Bunker and initial reload, run a paid yard order and concurrent station projects, test response and servicing, then test diplomacy, claim and handoff. Save and reload during active work. Capture the X4 script log and fix faults at the responsible subsystem.
 
-Final player-authored station geometry, full Operations Board polish, expansion balancing and scale tuning can follow the test candidate. The design keeps regional High Command relocation possible, including a preferred Core currently held by an ally. Completed-station dismantling, correct refunds and relocation require separate proof before activation. Bunker stays on Earth.
+The highest-risk junction is an in-flight native order crossing save/reload. Test one paid queue entry and one Builder reservation before expanding the scenario. The engine result decides whether to scale up. If a source reference or mount cannot be verified, record the exact gap and keep that capability gated while unrelated work continues.
+
+Final station geometry, full Operations Board polish, scale tuning and regional headquarters relocation remain later work. The A1.0 design preserves same-station Admin promotion and records ideal versus usable Core candidates. Completed-station dismantling and refunds need separate proof. Bunker stays on Earth.
