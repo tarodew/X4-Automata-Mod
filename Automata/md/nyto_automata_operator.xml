@@ -3,31 +3,289 @@
   <cues>
     <cue name="Offer" instantiate="true">
       <conditions>
-        <event_conversation_started conversation="default"/>
-        <check_value value="global.$nyto_automata?"/>
-        <check_value value="@event.object.owner == faction.yorha or @event.object.owner == faction.player"/>
+        <check_any>
+          <event_conversation_started conversation="default"/>
+          <event_conversation_returned_to_section section="default"/>
+        </check_any>
+        <check_value value="@global.$nyto_automata.$schema == 2"/>
       </conditions>
       <actions>
-        <add_player_choice text="{985700,5}" section="nyto_auto_home" position="top_right"/>
+        <run_actions ref="AllowedContact" result="$Allowed">
+          <param name="Actor" value="event.object"/>
+        </run_actions>
+        <do_if value="$Allowed">
+          <add_player_choice_sub text="{985700,5}" section="nyto_auto_home"/>
+        </do_if>
       </actions>
     </cue>
-    <cue name="Menu" instantiate="true">
+    <cue name="Dispatch" instantiate="true">
       <conditions>
-        <event_conversation_next_section section="nyto_auto_home"/>
+        <event_conversation_next_section sectionprefix="nyto_auto_"/>
+        <check_value value="@global.$nyto_automata.$schema == 2"/>
       </conditions>
       <actions>
-        <add_player_choice text="'Write readiness report'" section="nyto_auto_report" position="top_left"/>
-        <add_player_choice_return text="'Back'" position="bottom_right"/>
+        <run_actions ref="AllowedContact" result="$Allowed">
+          <param name="Actor" value="event.object"/>
+        </run_actions>
+        <do_if value="$Allowed">
+          <run_actions ref="SelectAction">
+            <param name="Section" value="event.param"/>
+            <param name="Choice" value="@event.param2"/>
+          </run_actions>
+        </do_if>
       </actions>
     </cue>
-    <cue name="Report" instantiate="true">
-      <conditions>
-        <event_conversation_next_section section="nyto_auto_report"/>
-      </conditions>
+    <library name="AllowedContact" purpose="run_actions">
+      <params>
+        <param name="Actor"/>
+      </params>
       <actions>
-        <run_actions ref="md.Nyto_Automata_State.Report"/>
-        <add_player_choice text="'YoRHa Operations'" section="nyto_auto_home"/>
+        <!-- Default communications can supply a physical actor or a virtual NPC and its container. -->
+        <do_if value="typeof $Actor == datatype.list">
+          <set_value name="$Contact" exact="@$Actor.{1}"/>
+          <return value="(@$Contact.owner == faction.yorha or @$Contact.owner == faction.player) and @$Contact.people.{$Actor.{2}}.exists and not @$Contact.people.{$Actor.{2}}.customhandler"/>
+        </do_if>
+        <return value="typeof $Actor == datatype.component and not @$Actor.customhandler and (@$Actor.owner == faction.yorha or @$Actor.owner == faction.player)"/>
       </actions>
-    </cue>
+    </library>
+    <library name="SelectAction" purpose="run_actions">
+      <params>
+        <param name="Section"/>
+        <param name="Choice"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$Section == 'nyto_auto_home'">
+          <run_actions ref="Home"/>
+        </do_if>
+        <do_elseif value="$Section == 'nyto_auto_planners' and ['pause', 'resume'].indexof.{$Choice}">
+          <run_actions ref="SetPlanners">
+            <param name="Enable" value="$Choice == 'resume'"/>
+          </run_actions>
+          <run_actions ref="Home"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_founding'">
+          <run_actions ref="Request" result="$Accepted">
+            <param name="Kind" value="'founding'"/>
+          </run_actions>
+          <do_if value="$Accepted and not $S.$settings.$enabled">
+            <run_actions ref="SetPlanners">
+              <param name="Enable" value="true"/>
+            </run_actions>
+          </do_if>
+          <run_actions ref="Home"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_clear'">
+          <run_actions ref="Request">
+            <param name="Kind" value="'clear'"/>
+          </run_actions>
+          <run_actions ref="Policy"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_report'">
+          <run_actions ref="Report"/>
+          <run_actions ref="Home"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_sectors'">
+          <run_actions ref="SectorMenu"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_special_sectors'">
+          <add_player_choice text="{985700,17}" section="nyto_auto_sector_target" choiceparam="'arsenal'" position="top_left"/>
+          <add_player_choice text="{985700,18}" section="nyto_auto_sector_target" choiceparam="'front_gate'" position="left"/>
+          <add_player_choice text="{985700,9}" section="nyto_auto_sectors" position="bottom_right"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_sector_target'">
+          <run_actions ref="TargetMenu">
+            <param name="Kind" value="$Choice"/>
+          </run_actions>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_sector_current'">
+          <run_actions ref="Request">
+            <param name="Kind" value="$Choice"/>
+            <param name="Sector" value="player.sector"/>
+          </run_actions>
+          <run_actions ref="SectorMenu"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_sector_map' and ['claim', 'sponsor', 'prioritize', 'restrict', 'arsenal', 'front_gate'].indexof.{$Choice}">
+          <open_conversation_menu menu="MapMenu" param="[0, 0, true, null, null, 'selectComponent', ['nyto_auto_picked_' + $Choice, [class.sector, class.station, class.ship], null, null, {985700,21}]]" param2="null"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_policy'">
+          <run_actions ref="Policy"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_stance'">
+          <add_player_choice text="{985700,25}" section="nyto_auto_set_stance" choiceparam="'defensive'" position="top_left"/>
+          <add_player_choice text="{985700,26}" section="nyto_auto_set_stance" choiceparam="'balanced'" position="left"/>
+          <add_player_choice text="{985700,27}" section="nyto_auto_set_stance" choiceparam="'aggressive'" position="bottom_left"/>
+          <add_player_choice text="{985700,9}" section="nyto_auto_policy" position="bottom_right"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_set_stance'">
+          <do_if value="['defensive', 'balanced', 'aggressive'].indexof.{$Choice}">
+            <set_value name="$S.$policy" exact="$Choice"/>
+          </do_if>
+          <run_actions ref="Policy"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_set_war' and ['enable', 'disable'].indexof.{$Choice}">
+          <set_value name="$S.$settings.$war" exact="$Choice == 'enable'"/>
+          <run_actions ref="Policy"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_expansion'">
+          <add_player_choice text="{985700,29}" section="nyto_auto_set_expansion" choiceparam="'manual'" position="top_left"/>
+          <add_player_choice text="{985700,30}" section="nyto_auto_set_expansion" choiceparam="'nearby'" position="left"/>
+          <add_player_choice text="{985700,31}" section="nyto_auto_set_expansion" choiceparam="'galaxy'" position="bottom_left"/>
+          <add_player_choice text="{985700,9}" section="nyto_auto_policy" position="bottom_right"/>
+        </do_elseif>
+        <do_elseif value="$Section == 'nyto_auto_set_expansion' and ['manual', 'nearby', 'galaxy'].indexof.{$Choice}">
+          <set_value name="$S.$settings.$automatic_expansion" exact="$Choice == 'nearby' or $Choice == 'galaxy'"/>
+          <set_value name="$S.$settings.$galaxy_wide_expansion" exact="$Choice == 'galaxy'"/>
+          <run_actions ref="Policy"/>
+        </do_elseif>
+        <do_else>
+          <do_for_each name="$Kind" in="['claim', 'sponsor', 'prioritize', 'restrict', 'arsenal', 'front_gate']">
+            <do_if value="$Section == 'nyto_auto_picked_' + $Kind">
+              <set_value name="$Target" exact="@$Choice.{1}"/>
+              <run_actions ref="Request">
+                <param name="Kind" value="$Kind"/>
+                <param name="Sector" value="if @$Target.isclass.sector then $Target else @$Target.sector"/>
+              </run_actions>
+              <run_actions ref="SectorMenu"/>
+              <return/>
+            </do_if>
+          </do_for_each>
+        </do_else>
+      </actions>
+    </library>
+    <library name="Home" purpose="run_actions">
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$S.$settings.$enabled">
+          <add_player_choice text="{985700,7}" section="nyto_auto_planners" choiceparam="'pause'" position="top_left"/>
+        </do_if>
+        <do_else>
+          <add_player_choice text="{985700,8}" section="nyto_auto_planners" choiceparam="'resume'" position="top_left"/>
+        </do_else>
+        <add_player_choice text="{985700,10}" section="nyto_auto_founding" position="left"/>
+        <add_player_choice text="{985700,11}" section="nyto_auto_sectors" position="bottom_left"/>
+        <add_player_choice text="{985700,12}" section="nyto_auto_policy" position="top_right"/>
+        <add_player_choice text="{985700,13}" section="nyto_auto_report" position="right"/>
+        <add_player_choice_return text="{985700,9}" position="bottom_right"/>
+      </actions>
+    </library>
+    <library name="SetPlanners" purpose="run_actions">
+      <params>
+        <param name="Enable"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="$Enable">
+          <set_value name="$S.$settings.$construction" exact="true"/>
+          <set_value name="$S.$settings.$procurement" exact="true"/>
+          <set_value name="$S.$settings.$economy" exact="true"/>
+          <set_value name="$S.$settings.$security" exact="true"/>
+          <set_value name="$S.$settings.$recon" exact="true"/>
+          <set_value name="$S.$settings.$hq_promotion" exact="true"/>
+          <set_value name="$S.$settings.$divisions" exact="true"/>
+        </do_if>
+        <set_value name="$S.$settings.$enabled" exact="$Enable"/>
+        <show_help custom="if $Enable then {985700,32} else {985700,33}" duration="10s"/>
+      </actions>
+    </library>
+    <library name="SectorMenu" purpose="run_actions">
+      <actions>
+        <add_player_choice text="{985700,14}" section="nyto_auto_sector_target" choiceparam="'claim'" position="top_left"/>
+        <add_player_choice text="{985700,15}" section="nyto_auto_sector_target" choiceparam="'prioritize'" position="left"/>
+        <add_player_choice text="{985700,16}" section="nyto_auto_sector_target" choiceparam="'restrict'" position="bottom_left"/>
+        <add_player_choice text="{985700,42}" section="nyto_auto_sector_target" choiceparam="'sponsor'" position="top_right"/>
+        <add_player_choice text="{985700,43}" section="nyto_auto_special_sectors" position="right"/>
+        <add_player_choice text="{985700,9}" section="nyto_auto_home" position="bottom_right"/>
+      </actions>
+    </library>
+    <library name="TargetMenu" purpose="run_actions">
+      <params>
+        <param name="Kind"/>
+      </params>
+      <actions>
+        <add_player_choice text="{985700,19}" section="nyto_auto_sector_map" choiceparam="$Kind" position="top_left"/>
+        <add_player_choice text="{985700,20}.[@player.sector.knownname]" section="nyto_auto_sector_current" choiceparam="$Kind" selectable="@player.sector.exists" position="left"/>
+        <add_player_choice text="{985700,9}" section="nyto_auto_sectors" position="bottom_right"/>
+      </actions>
+    </library>
+    <library name="Policy" purpose="run_actions">
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <add_player_choice text="{985700,24}" section="nyto_auto_stance" position="top_left"/>
+        <do_if value="$S.$settings.$war">
+          <add_player_choice text="{985700,22}" section="nyto_auto_set_war" choiceparam="'disable'" position="left"/>
+        </do_if>
+        <do_else>
+          <add_player_choice text="{985700,23}" section="nyto_auto_set_war" choiceparam="'enable'" position="left"/>
+        </do_else>
+        <add_player_choice text="{985700,28}" section="nyto_auto_expansion" position="bottom_left"/>
+        <add_player_choice text="{985700,34}" section="nyto_auto_clear" position="top_right"/>
+        <add_player_choice text="{985700,9}" section="nyto_auto_home" position="bottom_right"/>
+      </actions>
+    </library>
+    <library name="Request" purpose="run_actions">
+      <params>
+        <param name="Kind"/>
+        <param name="Sector" default="null"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Accepted" exact="false"/>
+        <do_if value="$Kind == 'arsenal' or $Kind == 'front_gate'">
+          <do_if value="$Sector and $Sector.isclass.sector and $S.$settings.$enabled and $S.$settings.$construction">
+            <do_if value="$Kind == 'arsenal'">
+              <run_actions ref="md.Nyto_Automata_Clusters.SetArsenal" result="$Accepted">
+                <param name="Sector" value="$Sector"/>
+              </run_actions>
+            </do_if>
+            <do_else>
+              <run_actions ref="md.Nyto_Automata_Clusters.SetFrontGate" result="$Accepted">
+                <param name="Sector" value="$Sector"/>
+              </run_actions>
+            </do_else>
+          </do_if>
+        </do_if>
+        <do_else>
+          <run_actions ref="md.Nyto_Automata_Strategy.Request" result="$Accepted">
+            <param name="Kind" value="$Kind"/>
+            <param name="Sector" value="$Sector"/>
+          </run_actions>
+        </do_else>
+        <show_help custom="if $Accepted then {985700,35} else {985700,36}" duration="10s"/>
+        <return value="$Accepted"/>
+      </actions>
+    </library>
+    <library name="Report" purpose="run_actions">
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Expansion" exact="if @$S.$settings.$galaxy_wide_expansion then {985700,31} else (if $S.$settings.$automatic_expansion then {985700,30} else {985700,29})"/>
+        <set_value name="$Summary" exact="{985700,37}.[@$S.$build, @$S.$foundation_status, $S.$settings.$enabled, $S.$policy, $S.$settings.$war, $Expansion, @$S.$directive.$kind, @$S.$directive.$sector.knownname, @$S.$directive.$phase, @$S.$directive.$blocker]"/>
+        <set_value name="$Detail" exact="$Summary + {985700,38}.[@$S.$active_strategy.$phase, @$S.$active_strategy.$blocker, $S.$sectors.count, $S.$projects.count, $S.$slots.count, $S.$fleets.count, $S.$incidents.count]"/>
+        <set_value name="$Listed" exact="0"/>
+        <do_all exact="$S.$projects.count" counter="$i">
+          <set_value name="$P" exact="$S.$projects.{$i}"/>
+          <do_if value="$P.$phase != 'operational' and $P.$blocker">
+            <set_value name="$Detail" exact="$Detail + {985700,39}.[@$P.$sector.knownname, $P.$kind, $P.$phase, $P.$blocker]"/>
+            <set_value name="$Listed" operation="add" exact="1"/>
+            <do_if value="$Listed ge 5">
+              <break/>
+            </do_if>
+          </do_if>
+        </do_all>
+        <set_value name="$Listed" exact="0"/>
+        <do_all exact="$S.$slots.count" counter="$i">
+          <set_value name="$Q" exact="$S.$slots.{$i}"/>
+          <do_if value="$Q.$enabled and $Q.$blocker">
+            <set_value name="$Detail" exact="$Detail + {985700,40}.[$Q.$role, $Q.$phase, $Q.$blocker]"/>
+            <set_value name="$Listed" operation="add" exact="1"/>
+            <do_if value="$Listed ge 5">
+              <break/>
+            </do_if>
+          </do_if>
+        </do_all>
+        <write_to_logbook category="general" text="$Detail" title="{985700,5}"/>
+        <show_help custom="$Summary + {985700,41}" duration="20s"/>
+      </actions>
+    </library>
   </cues>
 </mdscript>

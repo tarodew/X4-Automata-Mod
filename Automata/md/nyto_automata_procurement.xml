@@ -32,9 +32,10 @@
           <do_if value="not $S.$roles?">
             <run_actions ref="md.Nyto_Automata_Equipment.Initialize"/>
           </do_if>
-          <do_if value="player.age ge $S.$yard_cache_time + 2min or not $S.$yards.count">
+          <do_if value="not @$S.$yard_cache_ready or player.age ge $S.$yard_cache_time + 2min">
             <set_value name="$S.$yard_cache_time" exact="player.age"/>
-            <find_station name="$S.$yards" space="player.galaxy" owner="faction.player" multiple="true"/>
+            <set_value name="$S.$yard_cache_ready" exact="true"/>
+            <find_station name="$S.$yards" space="player.galaxy" owner="faction.player" canbuildships="true" canbuildfor="faction.yorha" hascontrolentity="controlpost.shiptrader" multiple="true"/>
           </do_if>
           <do_all exact="[12, $S.$slots.count].min" counter="$i">
             <set_value name="$S.$queue_cursor" operation="add" exact="1"/>
@@ -71,7 +72,7 @@
             <return value="false"/>
           </do_if>
         </do_all>
-        <do_if value="$Ticket and $Ticket.exists">
+        <do_if value="@$Ticket.exists or @$Ticket.state == componentstate.operational">
           <find_object_component name="$Parts" object="$Ticket" class="[class.weapon, class.turret, class.shieldgenerator, class.engine]" multiple="true"/>
           <do_all exact="$Parts.count" counter="$i">
             <do_if value="$Parts.{$i}.macro.ware and not $Equipment.indexof.{$Parts.{$i}.macro.ware}">
@@ -82,21 +83,45 @@
         <return value="true"/>
       </actions>
     </library>
+    <library name="CheckDeliveredLoadout" purpose="run_actions">
+      <params>
+        <param name="Q"/>
+      </params>
+      <actions>
+        <run_actions ref="md.Nyto_Automata_Equipment.CheckTurrets" result="$Fits">
+          <param name="Ship" value="$Q.$ship"/>
+          <param name="Role" value="global.$nyto_automata.$roles.{$Q.$role}"/>
+        </run_actions>
+        <set_value name="$Q.$loadout_verified" exact="$Fits"/>
+        <do_if value="not $Fits">
+          <set_value name="$Q.$phase" exact="'loadout_blocked'"/>
+          <set_value name="$Q.$blocker" exact="'DELIVERED_TURRET_LOADOUT_MISMATCH'"/>
+        </do_if>
+        <do_elseif value="$Q.$phase == 'loadout_blocked'">
+          <set_value name="$Q.$phase" exact="'ready'"/>
+          <set_value name="$Q.$blocker" exact="''"/>
+        </do_elseif>
+      </actions>
+    </library>
     <library name="Step" purpose="run_actions">
       <params>
         <param name="Q"/>
       </params>
       <actions>
         <set_value name="$S" exact="global.$nyto_automata"/>
-        <do_if value="not $Q.$enabled">
-          <return/>
-        </do_if>
         <do_if value="@$Q.$ship.exists">
           <do_if value="$Q.$ship.owner != faction.yorha">
             <set_value name="$Q.$ship" exact="null"/>
             <set_value name="$Q.$phase" exact="'deficit'"/>
+            <remove_value name="$Q.$loadout_verified"/>
           </do_if>
           <do_else>
+            <do_if value="$Q.$ship.isoperational and (not $Q.$loadout_verified? or $Q.$phase == 'loadout_blocked') and player.age ge @$Q.$last_loadout_check + 2min">
+              <set_value name="$Q.$last_loadout_check" exact="player.age"/>
+              <run_actions ref="CheckDeliveredLoadout">
+                <param name="Q" value="$Q"/>
+              </run_actions>
+            </do_if>
             <return/>
           </do_else>
         </do_if>
@@ -105,34 +130,55 @@
           <set_value name="$Q.$blocker" exact="'WAITING_FOR_REPAIRED_RETURN'"/>
           <return/>
         </do_if>
-        <do_if value="$Q.$phase == 'submitting' or $Q.$phase == 'requesting' or $Q.$phase == 'quarantined'">
+        <do_if value="$Q.$phase == 'requesting' or $Q.$phase == 'quarantined'">
           <return/>
         </do_if>
-        <do_if value="@$Q.$ticket.exists">
-          <set_requested_job_ship_timeout ship="$Q.$ticket" timeout="player.age + 2h"/>
-          <do_if value="$Q.$ticket.isoperational and not $Q.$ticket.iswaitingjobship and $Q.$ticket.sector">
+        <!-- A disconnected native job ship may be operational without .exists. -->
+        <do_if value="(@$Q.$ticket.exists or @$Q.$ticket.state == componentstate.operational) and ($Q.$ticket.isrequestedjobship or $Q.$ticket.sector)">
+          <do_if value="$Q.$ticket.isrequestedjobship">
+            <set_requested_job_ship_timeout ship="$Q.$ticket" timeout="player.age + 2h"/>
+          </do_if>
+          <do_if value="$Q.$ticket.exists and $Q.$ticket.isoperational and $Q.$ticket.sector">
             <run_actions ref="AcceptBuilt">
               <param name="Q" value="$Q"/>
               <param name="Ship" value="$Q.$ticket"/>
             </run_actions>
             <return/>
           </do_if>
-          <do_if value="$Q.$phase == 'queued'">
+          <do_if value="$Q.$phase == 'queued' or $Q.$phase == 'submitting'">
             <do_if value="not @$Q.$yard.exists">
               <set_value name="$Q.$blocker" exact="'YARD_DESTROYED_RECONCILIATION_REQUIRED'"/>
             </do_if>
             <do_else>
-              <set_value name="$Q.$blocker" exact="'NATIVE_QUEUE_RESOURCES_OR_PROCESSOR'"/>
+              <run_actions ref="FindNativeBuild" result="$Build">
+                <param name="Q" value="$Q"/>
+              </run_actions>
+              <do_if value="$Build">
+                <set_value name="$Q.$build" exact="$Build"/>
+                <set_value name="$Q.$phase" exact="'queued'"/>
+                <set_value name="$Q.$blocker" exact="if $Q.$yard.builds.inprogress.indexof.{$Build} then 'NATIVE_BUILD_IN_PROGRESS' else (if $Q.$yard.neededbuildresources.{$Build}.count then 'WAITING_FOR_NATIVE_BUILD_WARES' else 'WAITING_FOR_NATIVE_BUILD_PROCESSOR')"/>
+              </do_if>
+              <do_else>
+                <set_value name="$Q.$blocker" exact="'NATIVE_QUEUE_UNCONFIRMED_NO_DUPLICATE_RETRY'"/>
+              </do_else>
             </do_else>
             <return/>
           </do_if>
         </do_if>
-        <do_elseif value="$Q.$phase == 'queued'">
+        <do_elseif value="$Q.$phase == 'queued' or $Q.$phase == 'submitting'">
           <!-- Do not replace a missing ticket while an unconfirmed build may still finish. -->
           <set_value name="$Q.$phase" exact="'quarantined'"/>
           <set_value name="$Q.$blocker" exact="'QUEUED_TICKET_MISSING_RECONCILIATION_REQUIRED'"/>
           <return/>
         </do_elseif>
+        <do_if value="not $Q.$enabled or not @$Q.$home.exists or ($Q.$group == 'economy' and @$S.$restricted_sectors.{$Q.$home.sector.macro.id})">
+          <!-- A disabled deficit can safely release an unqueued manufacturing ticket. -->
+          <do_if value="@$Q.$ticket.isrequestedjobship and not @$Q.$ticket.sector">
+            <remove_job_ship_request ship="$Q.$ticket"/>
+            <set_value name="$Q.$ticket" exact="null"/>
+          </do_if>
+          <return/>
+        </do_if>
         <do_if value="player.age lt $Q.$last_request + 30s">
           <return/>
         </do_if>
@@ -159,9 +205,15 @@
         </do_all>
         <!-- Only the single builder:1 obligation is eligible for emergency Terran continuity. -->
         <do_if value="not $Best and $Q.$key == 'builder:1' and $Q.$role == 'builder'">
-          <find_ship name="$Builders" space="player.galaxy" owner="faction.yorha" macro="macro.ship_ter_xl_builder_01_a_macro" multiple="true"/>
-          <do_if value="not $Builders.count">
-            <find_station name="$Fallback" space="player.galaxy" owner="faction.terran" multiple="true"/>
+          <set_value name="$HasBuilder" exact="false"/>
+          <do_for_each name="$Builder" in="$S.$builders">
+            <do_if value="@$Builder.exists and $Builder.isoperational and $Builder.owner == faction.yorha">
+              <set_value name="$HasBuilder" exact="true"/>
+              <break/>
+            </do_if>
+          </do_for_each>
+          <do_if value="not $HasBuilder">
+            <find_station name="$Fallback" space="player.galaxy" owner="faction.terran" canbuildships="true" canbuildfor="faction.yorha" hascontrolentity="controlpost.shiptrader" multiple="true"/>
             <do_all exact="$Fallback.count" counter="$y">
               <run_actions ref="Eligible" result="$OK">
                 <param name="Yard" value="$Fallback.{$y}"/>
@@ -179,7 +231,7 @@
           <set_value name="$Q.$blocker" exact="'NO_ELIGIBLE_SPONSOR_YARD_OR_EQUIPMENT'"/>
           <return/>
         </do_if>
-        <do_if value="not @$Q.$ticket.exists">
+        <do_if value="not (@$Q.$ticket.isrequestedjobship and not @$Q.$ticket.sector)">
           <set_value name="$Q.$phase" exact="'requesting'"/>
           <request_job_ship name="$Ticket" job="$Role.$job" requester="$Q.$home"/>
           <do_if value="not $Ticket">
@@ -191,7 +243,7 @@
           <set_value name="$Q.$generation" operation="add" exact="1"/>
           <set_value name="$Ticket.$nyto_automata_slot" exact="$Q.$key"/>
           <set_requested_job_ship_timeout ship="$Ticket" timeout="player.age + 2h"/>
-          <do_if value="not $Ticket.iswaitingjobship">
+          <do_if value="not $Ticket.isrequestedjobship or @$Ticket.sector">
             <set_value name="$Q.$phase" exact="'quarantined'"/>
             <set_value name="$Q.$blocker" exact="'UNEXPECTED_CONNECTED_TICKET_NOT_ACCEPTED'"/>
             <return/>
@@ -207,7 +259,12 @@
           <set_value name="$Q.$blocker" exact="'GENERATED_EQUIPMENT_NOT_BUILDABLE'"/>
           <return/>
         </do_if>
-        <get_object_value object="$Q.$ticket" pricetable="$Best.buildbuyprices" result="$Price"/>
+        <do_if value="$Best.isplayerowned">
+          <get_object_value object="$Q.$ticket" pricetable="$Best.buildbuyprices" result="$Price"/>
+        </do_if>
+        <do_else>
+          <get_object_value object="$Q.$ticket" priceobject="$Best" result="$Price"/>
+        </do_else>
         <do_if value="$Price le 0Cr">
           <set_value name="$Q.$blocker" exact="'INVALID_NATIVE_PRICE'"/>
           <set_value name="$Q.$phase" exact="'waiting_yard'"/>
@@ -225,13 +282,31 @@
         </do_else>
       </actions>
     </library>
+    <library name="FindNativeBuild" purpose="run_actions">
+      <params>
+        <param name="Q"/>
+      </params>
+      <actions>
+        <do_for_each name="$Build" in="$Q.$yard.builds.queued">
+          <do_if value="$Build.buildobject == $Q.$ticket and $Build.isshipbuild">
+            <return value="$Build"/>
+          </do_if>
+        </do_for_each>
+        <do_for_each name="$Build" in="$Q.$yard.builds.inprogress">
+          <do_if value="$Build.buildobject == $Q.$ticket and $Build.isshipbuild">
+            <return value="$Build"/>
+          </do_if>
+        </do_for_each>
+        <return value="null"/>
+      </actions>
+    </library>
     <library name="AcceptBuilt" purpose="run_actions">
       <params>
         <param name="Q"/>
         <param name="Ship"/>
       </params>
       <actions>
-        <do_if value="not $Ship.exists or $Ship.iswaitingjobship or not $Ship.sector or not $Ship.isoperational or $Ship.owner != faction.yorha">
+        <do_if value="not $Ship.exists or not $Ship.sector or not $Ship.isoperational or $Ship.owner != faction.yorha">
           <return/>
         </do_if>
         <do_if value="$Q.$phase != 'queued' and $Q.$phase != 'submitting'">
@@ -240,7 +315,9 @@
         <do_if value="$Q.$ticket != $Ship">
           <return/>
         </do_if>
-        <release_job_ship ship="$Ship"/>
+        <do_if value="$Ship.isjobship">
+          <release_job_ship ship="$Ship"/>
+        </do_if>
         <set_value name="$Q.$ship" exact="$Ship"/>
         <set_value name="$Q.$ticket" exact="null"/>
         <set_value name="$Q.$build" exact="null"/>
@@ -253,6 +330,10 @@
           <append_to_list name="global.$nyto_automata.$builders" exact="$Ship"/>
         </do_if>
         <set_value name="$Q.$assigned" exact="false"/>
+        <set_value name="$Q.$last_loadout_check" exact="player.age"/>
+        <run_actions ref="CheckDeliveredLoadout">
+          <param name="Q" value="$Q"/>
+        </run_actions>
       </actions>
     </library>
     <cue name="Built" instantiate="true">
@@ -268,6 +349,29 @@
             <param name="Ship" value="event.object"/>
           </run_actions>
         </do_if>
+      </actions>
+    </cue>
+    <cue name="Cancelled" instantiate="true">
+      <conditions>
+        <event_build_cancelled/>
+        <check_value value="global.$nyto_automata? and event.param.isshipbuild"/>
+      </conditions>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_for_each name="$Q" in="$S.$slots">
+          <do_if value="$Q.$yard == event.object and ($Q.$phase == 'queued' or $Q.$phase == 'submitting') and ($Q.$build == event.param or (@$Q.$ticket and $Q.$ticket == event.param.buildobject))">
+            <do_if value="@$Q.$ticket.isrequestedjobship and not @$Q.$ticket.sector">
+              <remove_job_ship_request ship="$Q.$ticket"/>
+            </do_if>
+            <set_value name="$Q.$ticket" exact="null"/>
+            <set_value name="$Q.$build" exact="null"/>
+            <set_value name="$Q.$yard" exact="null"/>
+            <set_value name="$Q.$phase" exact="'deficit'"/>
+            <set_value name="$Q.$blocker" exact="'NATIVE_BUILD_CANCELLED'"/>
+            <set_value name="$Q.$last_request" exact="player.age"/>
+            <break/>
+          </do_if>
+        </do_for_each>
       </actions>
     </cue>
   </cues>

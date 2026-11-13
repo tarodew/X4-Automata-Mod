@@ -19,6 +19,16 @@ The GitHub repository tracks the mod's own code, decisions, and validation evide
 | Behavior that can be tested outside X4 | Use the actual pure decision logic where extractable. Cover sponsor protection, the persistent relation mirror, ideal/usable Core selection, Builder eligibility, one order per deficit, and independent station blockers. State explicitly when a fixture tests a model of MD behavior. |
 | Packaging | Rebuild the ZIP twice with fixed file ordering and metadata. Compare hashes and confirm that it contains only the intended extension files. |
 
+### Run the repository checker
+
+From the repository root with Python 3 and `lxml` installed:
+
+```text
+python tools/automata_check.py --catalogue /path/to/X4-Catalogue.zip --base-reference /path/to/X4-Supplemental-Reference.zip --terran-reference /path/to/X4-DLC-Reference.zip --report /path/to/validation.json --package /path/to/Automata_V9.0.0A1.0.zip
+```
+
+The checker records passes, failures and skips. Use `--xsd-timeout 45` to attempt full MD XSD validation. A bounded timeout leaves the check open. The Terran reference archive in this workflow is a historical fixture. Its selector and mount checks do not establish the effective 9.0 DLC load order. Use the exact target game's data to close that gap.
+
 For an available source ZIP, basic checks can start with Python 3 and PowerShell while X4 stays closed:
 
 ```powershell
@@ -44,6 +54,6 @@ Static success leaves Mission Director import and expression evaluation, engine 
 | 4. Security and service | Verify wing and police assignments, reserve backfill, civilian rescue and restoration, Rapier observation, Builder escort relief, and docking/repair/rearm. |
 | 5. Fleet behavior | Test fixed formations, commander loss and succession, carrier and Honshu throughput, understrength reporting, replacement and recovery. |
 | 6. Diplomacy and expansion | Verify real standing and peace changes, disguise independence, local incident handling, allied/player protection, claim feasibility and security handoff. |
-| 7. Controls and scale | Check pause/resume, directives, blocker reporting, repeated reload, concurrent incidents and increasing sector/fleet scale. |
+| 7. Controls and scale | Check map selection and current-sector fallback, pause/resume, sponsor and claim directives, restrictions, blocker reporting, repeated reload, concurrent incidents and increasing sector/fleet scale. |
 
 Capture the initial state, action and expected observation for each scenario. Confirm persistent state before and after reload. A successful offline pass does not change the status of these engine checks.

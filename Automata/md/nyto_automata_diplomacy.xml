@@ -1,6 +1,15 @@
 <?xml version='1.0' encoding='utf-8'?>
 <mdscript name="Nyto_Automata_Diplomacy">
   <cues>
+    <cue name="PlayerRelationChanged" instantiate="true">
+      <conditions>
+        <event_faction_relation_changed faction="faction.player"/>
+        <check_value value="@global.$nyto_automata.$schema == 2"/>
+      </conditions>
+      <actions>
+        <run_actions ref="Sync"/>
+      </actions>
+    </cue>
     <cue name="Tick" instantiate="true">
       <conditions>
         <event_cue_signalled cue="md.Nyto_Automata_State.Pulse"/>
@@ -20,6 +29,7 @@
         </do_if>
         <set_value name="$S.$last_diplomacy" exact="player.age"/>
         <set_value name="$S.$hostiles" exact="[]"/>
+        <set_value name="$S.$relations" exact="table[]"/>
         <!-- Always use faction.player, never player.ship.owner or cover identity. defaultrelationto would ignore earned reputation and is deliberately NOT used. -->
         <do_for_each name="$F" in="lookup.faction.list">
           <do_if value="$F != faction.player and $F != faction.yorha and $F != faction.ownerless and $F.isactive">

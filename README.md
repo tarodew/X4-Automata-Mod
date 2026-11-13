@@ -2,7 +2,7 @@
 
 Automata adds **YoRHa**, a player-sponsored faction for **X4: Foundations 9.0**. It uses Terran technology and native X4 mechanics for construction, trade, fleet orders and servicing. YoRHa makes its own decisions about what to build, what to defend and when to act.
 
-**Current target:** `V9.0.0A1.0`, the first integrated gameplay test candidate. The September 13 A0.5 source is recovered and has passed a fresh structural check. The full game-data audit and in-game validation remain open.
+**Build branch:** `V9.0.0A1.0`, an integrated offline test candidate built from the September 13 A0.5 checkpoint. Engine validation is pending. See the build log for the implemented scope and open items.
 
 | Start here | Contents |
 | --- | --- |

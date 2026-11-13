@@ -1,0 +1,772 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mdscript name="Nyto_Automata_Strategy">
+  <cues>
+    <library name="Request" purpose="run_actions">
+      <params>
+        <param name="Kind"/>
+        <param name="Sector" default="null"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="@global.$nyto_automata"/>
+        <do_if value="not $S or $S.$schema != 2">
+          <return value="false"/>
+        </do_if>
+        <do_if value="$Kind != 'founding' and $Kind != 'claim' and $Kind != 'prioritize' and $Kind != 'restrict' and $Kind != 'sponsor' and $Kind != 'clear'">
+          <return value="false"/>
+        </do_if>
+        <do_if value="($Kind == 'claim' or $Kind == 'prioritize' or $Kind == 'restrict' or $Kind == 'sponsor') and (not @$Sector.exists or not $Sector.isclass.sector or not $Sector.isknown)">
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Old" exact="@$S.$directive"/>
+        <do_if value="$Kind != 'clear' and $Old and $Old.$kind == $Kind and @$Old.$sector == $Sector and $Old.$phase != 'complete' and $Old.$phase != 'cancelled'">
+          <return value="true"/>
+        </do_if>
+        <do_if value="$Kind == 'sponsor' and $Sector.owner != faction.player">
+          <return value="false"/>
+        </do_if>
+        <do_if value="@$S.$active_strategy.$automatic and not $S.$active_strategy.$projects_authorized and ($Kind == 'claim' or $Kind == 'prioritize' or $Kind == 'sponsor')">
+          <run_actions ref="End">
+            <param name="Operation" value="$S.$active_strategy"/>
+            <param name="Phase" value="'cancelled'"/>
+            <param name="Blocker" value="'YIELDED_TO_PLAYER_DIRECTIVE'"/>
+          </run_actions>
+        </do_if>
+        <do_if value="$Old and not ($Old == @$S.$active_strategy and $Old.$projects_authorized)">
+          <do_if value="$Old.$kind == 'restrict'">
+            <remove_value name="$S.$restricted_sectors.{$Old.$sector.macro.id}"/>
+          </do_if>
+          <do_if value="$Old == @$S.$active_strategy">
+            <run_actions ref="End">
+              <param name="Operation" value="$Old"/>
+              <param name="Phase" value="'cancelled'"/>
+              <param name="Blocker" value="'PLAYER_DIRECTIVE_REPLACED_OR_CLEARED'"/>
+            </run_actions>
+          </do_if>
+        </do_if>
+        <do_if value="$Kind == 'clear'">
+          <set_value name="$S.$directive" exact="null"/>
+          <return value="$Old != null"/>
+        </do_if>
+        <run_actions ref="NewOperation" result="$D">
+          <param name="Kind" value="$Kind"/>
+          <param name="Sector" value="$Sector"/>
+          <param name="Automatic" value="false"/>
+        </run_actions>
+        <set_value name="$S.$directive" exact="$D"/>
+        <do_if value="$Kind == 'restrict'">
+          <do_if value="not $S.$restricted_sectors?">
+            <set_value name="$S.$restricted_sectors" exact="table[]"/>
+          </do_if>
+          <set_value name="$S.$restricted_sectors.{$Sector.macro.id}" exact="true"/>
+          <set_value name="$D.$phase" exact="'restricted'"/>
+          <set_value name="$D.$blocker" exact="''"/>
+        </do_if>
+        <return value="true"/>
+      </actions>
+    </library>
+
+    <library name="NewOperation" purpose="run_actions">
+      <params>
+        <param name="Kind"/>
+        <param name="Sector"/>
+        <param name="Automatic"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Operation" exact="table[$key = 'strategy:' + ($S.$operations.count + 1), $kind = $Kind, $sector = $Sector, $automatic = $Automatic, $phase = 'queued', $blocker = '', $fleets = [], $enemy = null, $target = null, $clear_sweeps = 0, $projects_authorized = false, $created = player.age]"/>
+        <append_to_list name="$S.$operations" exact="$Operation"/>
+        <return value="$Operation"/>
+      </actions>
+    </library>
+
+    <library name="End" purpose="run_actions">
+      <params>
+        <param name="Operation"/>
+        <param name="Phase"/>
+        <param name="Blocker"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <run_actions ref="Release">
+          <param name="Operation" value="$Operation"/>
+        </run_actions>
+        <set_value name="$Operation.$phase" exact="$Phase"/>
+        <set_value name="$Operation.$blocker" exact="$Blocker"/>
+        <do_if value="@$S.$active_strategy == $Operation">
+          <set_value name="$S.$active_strategy" exact="null"/>
+        </do_if>
+      </actions>
+    </library>
+
+    <library name="Release" purpose="run_actions">
+      <params>
+        <param name="Operation"/>
+      </params>
+      <actions>
+        <do_for_each name="$F" in="$Operation.$fleets">
+          <do_if value="@$F.$operation == $Operation.$key">
+            <run_actions ref="md.Nyto_Automata_Fleets.Mission">
+              <param name="F" value="$F"/>
+              <param name="Mission" value="'idle'"/>
+              <param name="Operation" value="$Operation.$key"/>
+            </run_actions>
+          </do_if>
+        </do_for_each>
+        <set_value name="$Operation.$fleets" exact="[]"/>
+        <set_value name="$Operation.$target" exact="null"/>
+        <set_value name="$Operation.$clear_sweeps" exact="0"/>
+      </actions>
+    </library>
+
+    <library name="FormalEnemy" purpose="run_actions">
+      <params>
+        <param name="Faction"/>
+      </params>
+      <actions>
+        <run_actions ref="md.Nyto_Automata_Core.FormalEnemy" result="$Hostile">
+          <param name="Faction" value="$Faction"/>
+        </run_actions>
+        <return value="$Hostile"/>
+      </actions>
+    </library>
+
+    <library name="Route" purpose="run_actions">
+      <params>
+        <param name="From"/>
+        <param name="Sector"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not @$From.exists or not @$Sector.exists or not $Sector.isknown">
+          <return value="false"/>
+        </do_if>
+        <do_if value="$From.sector == $Sector or $From == $Sector">
+          <return value="true"/>
+        </do_if>
+        <get_global_path component="$Path" resultdistance="$Distance" multiple="true" uselocalhighways="false" refobject="player.entity" useknownpath="true">
+          <start object="$From"/>
+          <end object="$Sector"/>
+        </get_global_path>
+        <do_if value="not $Path.count or $Distance lt 0">
+          <return value="false"/>
+        </do_if>
+        <do_for_each name="$Element" in="$Path">
+          <set_value name="$Intermediate" exact="if $Element.isclass.sector then $Element else @$Element.sector"/>
+          <do_if value="$Intermediate and $Intermediate != $Sector and $Intermediate != $From.sector and $Intermediate != $From">
+            <do_if value="@$S.$restricted_sectors.{$Intermediate.macro.id} or ($Intermediate.owner != faction.ownerless and faction.player.hasrelation.kill.{$Intermediate.owner})">
+              <return value="false"/>
+            </do_if>
+          </do_if>
+        </do_for_each>
+        <return value="true"/>
+      </actions>
+    </library>
+
+    <library name="BuilderAvailable" purpose="run_actions">
+      <params>
+        <param name="Sector"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_for_each name="$B" in="$S.$builders">
+          <do_if value="@$B.isoperational and $B.owner == faction.yorha and not @$B.$nyto_automata_project">
+            <run_actions ref="Route" result="$Safe">
+              <param name="From" value="$B"/>
+              <param name="Sector" value="$Sector"/>
+            </run_actions>
+            <do_if value="$Safe">
+              <return value="true"/>
+            </do_if>
+          </do_if>
+        </do_for_each>
+        <return value="false"/>
+      </actions>
+    </library>
+
+    <library name="Survey" purpose="run_actions">
+      <params>
+        <param name="Sector"/>
+      </params>
+      <actions>
+        <find_station name="$Stations" space="$Sector" multiple="true"/>
+        <find_ship name="$Ships" space="$Sector" primarypurpose="purpose.fight" multiple="true"/>
+        <find_station name="$Claims" space="$Sector" canclaimownership="true" multiple="true"/>
+        <set_value name="$Targets" exact="[]"/>
+        <set_value name="$ForeignClaim" exact="false"/>
+        <set_value name="$Capitals" exact="0"/>
+        <!-- Prioritize claim-capable installations, then other stations and military hulls. -->
+        <set_value name="$Contacts" exact="[]"/>
+        <append_list_elements name="$Contacts" other="$Claims"/>
+        <append_list_elements name="$Contacts" other="$Stations"/>
+        <append_list_elements name="$Contacts" other="$Ships"/>
+        <do_for_each name="$T" in="$Contacts">
+          <do_if value="$T.exists and $T.trueowner != faction.yorha and not $Targets.indexof.{$T}">
+            <run_actions ref="FormalEnemy" result="$Hostile">
+              <param name="Faction" value="$T.trueowner"/>
+            </run_actions>
+            <do_if value="$Hostile">
+              <append_to_list name="$Targets" exact="$T"/>
+              <do_if value="$T.isclass.ship_l or $T.isclass.ship_xl">
+                <set_value name="$Capitals" operation="add" exact="1"/>
+              </do_if>
+            </do_if>
+            <do_elseif value="$Claims.indexof.{$T}">
+              <set_value name="$ForeignClaim" exact="true"/>
+            </do_elseif>
+          </do_if>
+        </do_for_each>
+        <return value="table[$targets = $Targets, $foreign_claim = $ForeignClaim, $capitals = $Capitals]"/>
+      </actions>
+    </library>
+
+    <library name="Handoff" purpose="run_actions">
+      <params>
+        <param name="Operation"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Sector" exact="$Operation.$sector"/>
+        <set_value name="$R" exact="@$S.$sector_index.{$Sector.macro.id}"/>
+        <set_value name="$Operation.$phase" exact="'constructing'"/>
+        <set_value name="$Operation.$blocker" exact="'WAITING_FOR_ADMINISTRATION_AND_OWNERSHIP'"/>
+        <do_if value="not @$R.$admin.isoperational or $R.$admin.owner != faction.yorha or $Sector.owner != faction.yorha">
+          <return/>
+        </do_if>
+        <set_value name="$Operation.$phase" exact="'security_handoff'"/>
+        <set_value name="$Operation.$blocker" exact="'WAITING_FOR_CLUSTER_PATROL_WINGS_AND_POLICING'"/>
+        <do_if value="@$R.$cluster and @$R.$security_handoff_ready">
+          <do_if value="$Operation.$enemy">
+            <set_value name="$S.$last_completed_front" exact="$Sector"/>
+          </do_if>
+          <run_actions ref="End">
+            <param name="Operation" value="$Operation"/>
+            <param name="Phase" value="'complete'"/>
+            <param name="Blocker" value="''"/>
+          </run_actions>
+        </do_if>
+      </actions>
+    </library>
+
+    <library name="PlanWar" purpose="run_actions">
+      <params>
+        <param name="Operation"/>
+        <param name="SurveyResult"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Sector" exact="$Operation.$sector"/>
+        <set_value name="$Operation.$phase" exact="'blocked'"/>
+        <do_if value="not $S.$settings.$war or $S.$policy == 'defensive'">
+          <run_actions ref="Release">
+            <param name="Operation" value="$Operation"/>
+          </run_actions>
+          <set_value name="$Operation.$blocker" exact="'OFFENSIVE_OPERATIONS_DISABLED'"/>
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Operation.$blocker" exact="'WAITING_FOR_READY_REGULAR_DIVISION_AND_SAFE_ROUTE'"/>
+        <!-- Provisional concentration guard. Size one 10-destroyer division for no more than five opposing capitals. -->
+        <set_value name="$Needed" exact="1"/>
+        <do_while value="$Needed le 4 and $SurveyResult.$capitals gt $Needed * 5">
+          <set_value name="$Needed" operation="add" exact="1"/>
+        </do_while>
+        <do_if value="$Needed gt 4">
+          <run_actions ref="Release">
+            <param name="Operation" value="$Operation"/>
+          </run_actions>
+          <set_value name="$Operation.$blocker" exact="'OBSERVED_CAPITAL_FORCE_EXCEEDS_REGULAR_DIVISION_LIMIT'"/>
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Available" exact="[]"/>
+        <set_value name="$Unassigned" exact="[]"/>
+        <do_all exact="4" counter="$i">
+          <set_value name="$F" exact="@$S.$fleet_index.{'regular:' + $i}"/>
+          <do_if value="$F and $F.$enabled and @$F.$leader.isoperational and $F.$phase == 'ready' and (@$F.$operation == $Operation.$key or (not @$F.$operation and $F.$mission == 'idle'))">
+            <run_actions ref="Route" result="$Safe">
+              <param name="From" value="$F.$leader"/>
+              <param name="Sector" value="$Sector"/>
+            </run_actions>
+            <do_if value="$Safe">
+              <do_if value="@$F.$operation == $Operation.$key">
+                <append_to_list name="$Available" exact="$F"/>
+              </do_if>
+              <do_else>
+                <append_to_list name="$Unassigned" exact="$F"/>
+              </do_else>
+            </do_if>
+          </do_if>
+        </do_all>
+        <append_list_elements name="$Available" other="$Unassigned"/>
+        <do_if value="$Available.count lt $Needed">
+          <run_actions ref="Release">
+            <param name="Operation" value="$Operation"/>
+          </run_actions>
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Observers" exact="[]"/>
+        <set_value name="$Arrived" exact="0"/>
+        <do_all exact="$Needed" counter="$i">
+          <set_value name="$F" exact="$Available.{$i}"/>
+          <do_if value="$F.$leader.sector == $Sector and @$F.$operation == $Operation.$key and ($F.$mission == 'attack' or ($F.$mission == 'stage' and @$F.$stage_arrived == $F.$desired))">
+            <set_value name="$Arrived" operation="add" exact="1"/>
+            <do_for_each name="$Slot" in="$F.$slots">
+              <do_if value="@$Slot.$ship.isoperational and $Slot.$ship.sector == $Sector">
+                <append_to_list name="$Observers" exact="$Slot.$ship"/>
+              </do_if>
+            </do_for_each>
+          </do_if>
+        </do_all>
+        <set_value name="$Target" exact="null"/>
+        <do_for_each name="$T" in="$SurveyResult.$targets">
+          <run_actions ref="md.Nyto_Automata_Security.Observed" result="$Seen">
+            <param name="Target" value="$T"/>
+            <param name="Observers" value="$Observers"/>
+          </run_actions>
+          <do_if value="$Arrived == $Needed and $Seen and faction.yorha.mayattack.{$T}">
+            <set_value name="$Target" exact="$T"/>
+            <break/>
+          </do_if>
+        </do_for_each>
+        <!-- Give every selected formation the same objective, without taking a defence reservation. -->
+        <do_for_each name="$F" in="$Operation.$fleets">
+          <do_if value="not $Available.indexof.{$F} or $Available.indexof.{$F} gt $Needed">
+            <run_actions ref="md.Nyto_Automata_Fleets.Mission">
+              <param name="F" value="$F"/>
+              <param name="Mission" value="'idle'"/>
+              <param name="Operation" value="$Operation.$key"/>
+            </run_actions>
+          </do_if>
+        </do_for_each>
+        <set_value name="$Operation.$fleets" exact="[]"/>
+        <do_all exact="$Needed" counter="$i">
+          <set_value name="$F" exact="$Available.{$i}"/>
+          <run_actions ref="md.Nyto_Automata_Fleets.Mission" result="$Assigned">
+            <param name="F" value="$F"/>
+            <param name="Mission" value="if $Target then 'attack' else 'stage'"/>
+            <param name="Target" value="if $Target then $Target else $Sector"/>
+            <param name="Operation" value="$Operation.$key"/>
+          </run_actions>
+          <do_if value="not $Assigned">
+            <run_actions ref="Release">
+              <param name="Operation" value="$Operation"/>
+            </run_actions>
+            <set_value name="$Operation.$blocker" exact="'FORMATION_RESERVATION_CONFLICT'"/>
+            <return value="false"/>
+          </do_if>
+          <append_to_list name="$Operation.$fleets" exact="$F"/>
+        </do_all>
+        <set_value name="$Operation.$target" exact="$Target"/>
+        <set_value name="$Operation.$phase" exact="if $Target then 'engaged' else 'sector_sweep'"/>
+        <set_value name="$Operation.$blocker" exact="if $Arrived lt $Needed then 'WAITING_FOR_FORMATION_TO_ASSEMBLE_IN_SECTOR' else (if not $Target and $SurveyResult.$targets.count then 'WAITING_FOR_RADAR_CONFIRMATION' else '')"/>
+        <return value="$Arrived == $Needed and not $SurveyResult.$targets.count"/>
+      </actions>
+    </library>
+
+    <library name="SelectAutomatic" purpose="run_actions">
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Anchor" exact="$S.$bunker"/>
+        <do_if value="$S.$sectors.count">
+          <set_value name="$S.$expansion_cursor" exact="(@$S.$expansion_cursor % $S.$sectors.count) + 1"/>
+          <set_value name="$R" exact="$S.$sectors.{$S.$expansion_cursor}"/>
+          <do_if value="@$R.$sector.exists and ($R.$sector.owner == faction.player or ($R.$sector.owner == faction.yorha and @$R.$admin.isoperational))">
+            <set_value name="$Anchor" exact="$R.$sector"/>
+          </do_if>
+        </do_if>
+        <do_if value="not @$Anchor.exists">
+          <return value="null"/>
+        </do_if>
+        <do_if value="@$S.$settings.$galaxy_wide_expansion">
+          <find_sector_in_range name="$Candidates" object="$Anchor" mindistance="1" known="true" multiple="true"/>
+        </do_if>
+        <do_else>
+          <find_sector_in_range name="$Candidates" object="$Anchor" mindistance="1" maxdistance="2" known="true" multiple="true"/>
+        </do_else>
+        <do_if value="not $Candidates.count">
+          <return value="null"/>
+        </do_if>
+        <!-- At most eight sector surveys per expansion interval, even when galaxy-wide is enabled. -->
+        <do_all exact="[$Candidates.count, 8].min" counter="$i">
+          <set_value name="$S.$expansion_candidate_cursor" exact="(@$S.$expansion_candidate_cursor % $Candidates.count) + 1"/>
+          <set_value name="$Candidate" exact="$Candidates.{$S.$expansion_candidate_cursor}"/>
+          <do_if value="$Candidate.owner == faction.ownerless and not @$S.$sector_index.{$Candidate.macro.id} and not @$S.$restricted_sectors.{$Candidate.macro.id}">
+            <run_actions ref="Route" result="$Safe">
+              <param name="From" value="$Anchor"/>
+              <param name="Sector" value="$Candidate"/>
+            </run_actions>
+            <do_if value="$Safe">
+              <run_actions ref="BuilderAvailable" result="$Builder">
+                <param name="Sector" value="$Candidate"/>
+              </run_actions>
+              <do_if value="$Builder">
+                <run_actions ref="Survey" result="$Survey">
+                  <param name="Sector" value="$Candidate"/>
+                </run_actions>
+                <do_if value="not $Survey.$targets.count and not $Survey.$foreign_claim">
+                  <return value="$Candidate"/>
+                </do_if>
+              </do_if>
+            </do_if>
+          </do_if>
+        </do_all>
+        <return value="null"/>
+      </actions>
+    </library>
+
+    <library name="Sponsor" purpose="run_actions">
+      <params>
+        <param name="Operation"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Sector" exact="$Operation.$sector"/>
+        <do_if value="$Sector.owner != faction.player">
+          <run_actions ref="End">
+            <param name="Operation" value="$Operation"/>
+            <param name="Phase" value="'cancelled'"/>
+            <param name="Blocker" value="'SPONSOR_OWNERSHIP_REQUIRED'"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <set_value name="$Operation.$phase" exact="'blocked'"/>
+        <do_if value="@$S.$restricted_sectors.{$Sector.macro.id} or not $S.$settings.$enabled or not $S.$settings.$construction or not $S.$settings.$allow_sponsor_building">
+          <set_value name="$Operation.$blocker" exact="'SPONSOR_CONSTRUCTION_PAUSED_OR_RESTRICTED'"/>
+          <return/>
+        </do_if>
+        <set_value name="$R" exact="@$S.$sector_index.{$Sector.macro.id}"/>
+        <do_if value="not $R">
+          <run_actions ref="BuilderAvailable" result="$Builder">
+            <param name="Sector" value="$Sector"/>
+          </run_actions>
+          <do_if value="not $Builder">
+            <set_value name="$Operation.$blocker" exact="'WAITING_FOR_REAL_BUILDER_AND_SAFE_SUPPLY_ROUTE'"/>
+            <return/>
+          </do_if>
+          <run_actions ref="md.Nyto_Automata_Territory.Authorize" result="$Authorized">
+            <param name="Sector" value="$Sector"/>
+          </run_actions>
+          <do_if value="not $Authorized">
+            <set_value name="$Operation.$blocker" exact="'SPONSOR_BUILDOUT_NOT_AUTHORIZED'"/>
+            <return/>
+          </do_if>
+          <set_value name="$R" exact="@$S.$sector_index.{$Sector.macro.id}"/>
+        </do_if>
+        <do_if value="not @$R.$sponsor">
+          <set_value name="$Operation.$blocker" exact="'EXISTING_SECTOR_RECORD_IS_NOT_SPONSOR_BUILDOUT'"/>
+          <return/>
+        </do_if>
+        <set_value name="$Operation.$projects_authorized" exact="true"/>
+        <set_value name="$Operation.$phase" exact="'constructing'"/>
+        <set_value name="$Operation.$blocker" exact="'WAITING_FOR_SPONSOR_INFRASTRUCTURE'"/>
+        <do_all exact="$S.$project_template.count" counter="$i">
+          <set_value name="$P" exact="@$S.$project_index.{'%1:%2'.[$R.$key, $i]}"/>
+          <do_if value="@$P.$phase != 'operational' or not @$P.$station.isoperational or $P.$station.owner != faction.yorha">
+            <do_if value="@$P.$blocker">
+              <set_value name="$Operation.$blocker" exact="$P.$blocker"/>
+            </do_if>
+            <return/>
+          </do_if>
+        </do_all>
+        <run_actions ref="End">
+          <param name="Operation" value="$Operation"/>
+          <param name="Phase" value="'complete'"/>
+          <param name="Blocker" value="''"/>
+        </run_actions>
+      </actions>
+    </library>
+
+    <library name="SelectNextFront" purpose="run_actions">
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Anchor" exact="@$S.$last_completed_front"/>
+        <do_if value="not @$Anchor.exists">
+          <return value="null"/>
+        </do_if>
+        <find_sector_in_range name="$Candidates" object="$Anchor" mindistance="1" maxdistance="1" known="true" multiple="true"/>
+        <do_for_each name="$Candidate" in="$Candidates">
+          <run_actions ref="FormalEnemy" result="$Hostile">
+            <param name="Faction" value="$Candidate.owner"/>
+          </run_actions>
+          <do_if value="$Hostile and not @$S.$restricted_sectors.{$Candidate.macro.id} and @$S.$completed_fronts.{$Candidate.macro.id} != $Candidate.owner">
+            <run_actions ref="Survey" result="$Survey">
+              <param name="Sector" value="$Candidate"/>
+            </run_actions>
+            <do_if value="$Survey.$targets.count and $Survey.$capitals le 20">
+              <do_all exact="4" counter="$i">
+                <set_value name="$F" exact="@$S.$fleet_index.{'regular:' + $i}"/>
+                <do_if value="$F and $F.$enabled and $F.$phase == 'ready' and $F.$mission == 'idle' and not @$F.$operation">
+                  <run_actions ref="Route" result="$Safe">
+                    <param name="From" value="$F.$leader"/>
+                    <param name="Sector" value="$Candidate"/>
+                  </run_actions>
+                  <do_if value="$Safe">
+                    <return value="$Candidate"/>
+                  </do_if>
+                </do_if>
+              </do_all>
+            </do_if>
+          </do_if>
+        </do_for_each>
+        <return value="null"/>
+      </actions>
+    </library>
+
+    <library name="Step" purpose="run_actions">
+      <params>
+        <param name="Operation"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$Sector" exact="$Operation.$sector"/>
+        <do_if value="not @$Sector.exists or not $Sector.isknown">
+          <run_actions ref="End">
+            <param name="Operation" value="$Operation"/>
+            <param name="Phase" value="'cancelled'"/>
+            <param name="Blocker" value="'SECTOR_UNAVAILABLE'"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <set_value name="$Claim" exact="$Operation.$kind == 'claim'"/>
+        <set_value name="$Owner" exact="$Sector.owner"/>
+        <do_if value="$Operation.$kind == 'sponsor'">
+          <run_actions ref="Sponsor">
+            <param name="Operation" value="$Operation"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="$Owner == faction.player and $Claim">
+          <run_actions ref="End">
+            <param name="Operation" value="$Operation"/>
+            <param name="Phase" value="'cancelled'"/>
+            <param name="Blocker" value="'PLAYER_SPONSOR_TERRITORY_PROTECTED'"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="$Operation.$automatic and (($Claim and not $S.$settings.$automatic_expansion and not $Operation.$projects_authorized) or (not $Claim and $S.$policy != 'aggressive'))">
+          <run_actions ref="End">
+            <param name="Operation" value="$Operation"/>
+            <param name="Phase" value="'cancelled'"/>
+            <param name="Blocker" value="'AUTOMATIC_OPERATION_DISABLED'"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="@$S.$restricted_sectors.{$Sector.macro.id} or not $S.$settings.$enabled">
+          <run_actions ref="Release">
+            <param name="Operation" value="$Operation"/>
+          </run_actions>
+          <set_value name="$Operation.$phase" exact="'blocked'"/>
+          <set_value name="$Operation.$blocker" exact="if $S.$settings.$enabled then 'PLAYER_RESTRICTED_SECTOR' else 'PLANNERS_PAUSED'"/>
+          <return/>
+        </do_if>
+        <run_actions ref="FormalEnemy" result="$OwnerAtWar">
+          <param name="Faction" value="$Owner"/>
+        </run_actions>
+        <do_if value="$Claim and $Owner != faction.ownerless and $Owner != faction.yorha and not $OwnerAtWar">
+          <run_actions ref="End">
+            <param name="Operation" value="$Operation"/>
+            <param name="Phase" value="'cancelled'"/>
+            <param name="Blocker" value="'FOREIGN_NONHOSTILE_OWNER_PROTECTED'"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="$Operation.$enemy">
+          <run_actions ref="FormalEnemy" result="$StillAtWar">
+            <param name="Faction" value="$Operation.$enemy"/>
+          </run_actions>
+          <do_if value="not $StillAtWar">
+            <run_actions ref="Release">
+              <param name="Operation" value="$Operation"/>
+            </run_actions>
+            <do_if value="not $Operation.$projects_authorized">
+              <run_actions ref="End">
+                <param name="Operation" value="$Operation"/>
+                <param name="Phase" value="'cancelled'"/>
+                <param name="Blocker" value="'PERSISTENT_PLAYER_WAR_ENDED'"/>
+              </run_actions>
+              <return/>
+            </do_if>
+            <set_value name="$Operation.$enemy" exact="null"/>
+          </do_if>
+        </do_if>
+        <do_if value="$Operation.$target">
+          <run_actions ref="FormalEnemy" result="$TargetAtWar">
+            <param name="Faction" value="@$Operation.$target.trueowner"/>
+          </run_actions>
+          <do_if value="@$Operation.$target.exists and ($Operation.$target.sector != $Sector or not $TargetAtWar)">
+            <run_actions ref="Release">
+              <param name="Operation" value="$Operation"/>
+            </run_actions>
+          </do_if>
+        </do_if>
+        <run_actions ref="Survey" result="$Survey">
+          <param name="Sector" value="$Sector"/>
+        </run_actions>
+        <do_if value="$Claim and $Survey.$foreign_claim">
+          <run_actions ref="Release">
+            <param name="Operation" value="$Operation"/>
+          </run_actions>
+          <set_value name="$Operation.$phase" exact="'blocked'"/>
+          <set_value name="$Operation.$blocker" exact="'NONHOSTILE_ADMINISTRATION_PROTECTED'"/>
+          <return/>
+        </do_if>
+        <do_if value="$Claim and $Operation.$automatic and not $Operation.$projects_authorized and ($OwnerAtWar or $Survey.$targets.count)">
+          <run_actions ref="End">
+            <param name="Operation" value="$Operation"/>
+            <param name="Phase" value="'cancelled'"/>
+            <param name="Blocker" value="'AUTOMATIC_CLAIM_SITE_NO_LONGER_CLEAR'"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="$OwnerAtWar and not $Operation.$enemy">
+          <set_value name="$Operation.$enemy" exact="$Owner"/>
+        </do_if>
+        <do_elseif value="$Survey.$targets.count and not $Operation.$enemy">
+          <set_value name="$Operation.$enemy" exact="$Survey.$targets.{1}.trueowner"/>
+        </do_elseif>
+        <do_if value="$OwnerAtWar or $Survey.$targets.count or ($Operation.$enemy and not $Operation.$projects_authorized)">
+          <do_if value="$Survey.$targets.count">
+            <set_value name="$Operation.$clear_sweeps" exact="0"/>
+          </do_if>
+          <run_actions ref="PlanWar" result="$Clear">
+            <param name="Operation" value="$Operation"/>
+            <param name="SurveyResult" value="$Survey"/>
+          </run_actions>
+          <do_if value="not $Clear">
+            <set_value name="$Operation.$clear_sweeps" exact="0"/>
+            <return/>
+          </do_if>
+          <set_value name="$Operation.$clear_sweeps" operation="add" exact="1"/>
+          <do_if value="$Operation.$clear_sweeps lt 2">
+            <set_value name="$Operation.$blocker" exact="'VERIFYING_SECOND_SECTOR_SWEEP'"/>
+            <return/>
+          </do_if>
+        </do_if>
+        <do_if value="not $Claim">
+          <do_if value="$Operation.$enemy">
+            <do_if value="not $S.$completed_fronts?">
+              <set_value name="$S.$completed_fronts" exact="table[]"/>
+            </do_if>
+            <set_value name="$S.$completed_fronts.{$Sector.macro.id}" exact="$Operation.$enemy"/>
+            <set_value name="$S.$last_completed_front" exact="$Sector"/>
+          </do_if>
+          <run_actions ref="End">
+            <param name="Operation" value="$Operation"/>
+            <param name="Phase" value="'complete'"/>
+            <param name="Blocker" value="if $Operation.$enemy then '' else 'NO_FORMAL_HOSTILES_IN_SECTOR'"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="$Operation.$projects_authorized">
+          <run_actions ref="Handoff">
+            <param name="Operation" value="$Operation"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <set_value name="$Operation.$phase" exact="'blocked'"/>
+        <do_if value="$Owner != faction.ownerless and $Owner != faction.yorha">
+          <set_value name="$Operation.$blocker" exact="'WAITING_FOR_NATIVE_SECTOR_OWNERSHIP_RELEASE'"/>
+          <return/>
+        </do_if>
+        <do_if value="not $S.$settings.$construction or not @$S.$blueprints.$admin">
+          <set_value name="$Operation.$blocker" exact="'CONSTRUCTION_PAUSED_OR_ADMIN_PLAN_UNAVAILABLE'"/>
+          <return/>
+        </do_if>
+        <run_actions ref="BuilderAvailable" result="$Builder">
+          <param name="Sector" value="$Sector"/>
+        </run_actions>
+        <do_if value="not $Builder">
+          <set_value name="$Operation.$blocker" exact="'WAITING_FOR_REAL_BUILDER_AND_SAFE_SUPPLY_ROUTE'"/>
+          <return/>
+        </do_if>
+        <run_actions ref="md.Nyto_Automata_Territory.Authorize" result="$Authorized">
+          <param name="Sector" value="$Sector"/>
+        </run_actions>
+        <do_if value="not $Authorized">
+          <set_value name="$Operation.$blocker" exact="'NATIVE_TERRITORY_PRECONDITIONS_UNMET'"/>
+          <return/>
+        </do_if>
+        <set_value name="$Operation.$projects_authorized" exact="true"/>
+        <run_actions ref="Handoff">
+          <param name="Operation" value="$Operation"/>
+        </run_actions>
+      </actions>
+    </library>
+
+    <cue name="Tick" instantiate="true">
+      <conditions>
+        <event_cue_signalled cue="md.Nyto_Automata_State.Pulse"/>
+      </conditions>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <set_value name="$D" exact="@$S.$directive"/>
+        <set_value name="$O" exact="@$S.$active_strategy"/>
+        <!-- Drop order ownership as soon as policy or persistent standing invalidates it. -->
+        <do_if value="$O and $O.$fleets.count">
+          <run_actions ref="FormalEnemy" result="$AtWar">
+            <param name="Faction" value="$O.$enemy"/>
+          </run_actions>
+          <run_actions ref="FormalEnemy" result="$TargetAtWar">
+            <param name="Faction" value="@$O.$target.trueowner"/>
+          </run_actions>
+          <do_if value="not $S.$settings.$enabled or not $S.$settings.$war or $S.$policy == 'defensive' or not $AtWar or @$S.$restricted_sectors.{$O.$sector.macro.id} or (@$O.$target.exists and (not $TargetAtWar or $O.$target.sector != $O.$sector))">
+            <run_actions ref="Release">
+              <param name="Operation" value="$O"/>
+            </run_actions>
+          </do_if>
+        </do_if>
+        <do_if value="$D and $D.$kind == 'founding' and $D.$phase != 'complete'">
+          <set_value name="$D.$phase" exact="'blocked'"/>
+          <set_value name="$D.$blocker" exact="if not $S.$settings.$enabled then 'PLANNERS_PAUSED' else 'WAITING_FOR_BUNKER_AND_FOUNDING_BUILDER'"/>
+          <do_if value="$S.$settings.$enabled and @$S.$bunker.isoperational and @$S.$founding_builder.isoperational">
+            <set_value name="$D.$phase" exact="'complete'"/>
+            <set_value name="$D.$blocker" exact="''"/>
+          </do_if>
+        </do_if>
+        <do_if value="not $O and $D and ($D.$kind == 'claim' or $D.$kind == 'prioritize' or $D.$kind == 'sponsor') and $D.$phase == 'queued'">
+          <set_value name="$O" exact="$D"/>
+          <set_value name="$S.$active_strategy" exact="$O"/>
+        </do_if>
+        <do_if value="$S.$last_strategy_tick? and player.age lt $S.$last_strategy_tick + 30s">
+          <return/>
+        </do_if>
+        <set_value name="$S.$last_strategy_tick" exact="player.age"/>
+        <do_if value="$O">
+          <run_actions ref="Step">
+            <param name="Operation" value="$O"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="$S.$settings.$enabled and $S.$settings.$war and $S.$policy == 'aggressive' and (not $S.$last_front_check? or player.age ge $S.$last_front_check + 5min)">
+          <set_value name="$S.$last_front_check" exact="player.age"/>
+          <run_actions ref="SelectNextFront" result="$Front"/>
+          <do_if value="$Front">
+            <run_actions ref="NewOperation" result="$O">
+              <param name="Kind" value="'prioritize'"/>
+              <param name="Sector" value="$Front"/>
+              <param name="Automatic" value="true"/>
+            </run_actions>
+            <set_value name="$S.$active_strategy" exact="$O"/>
+            <run_actions ref="Step">
+              <param name="Operation" value="$O"/>
+            </run_actions>
+            <return/>
+          </do_if>
+        </do_if>
+        <do_if value="$S.$settings.$enabled and $S.$settings.$construction and $S.$settings.$automatic_expansion and player.age ge $S.$last_expansion + 5min">
+          <set_value name="$S.$last_expansion" exact="player.age"/>
+          <run_actions ref="SelectAutomatic" result="$Sector"/>
+          <do_if value="$Sector">
+            <run_actions ref="NewOperation" result="$O">
+              <param name="Kind" value="'claim'"/>
+              <param name="Sector" value="$Sector"/>
+              <param name="Automatic" value="true"/>
+            </run_actions>
+            <set_value name="$S.$active_strategy" exact="$O"/>
+            <run_actions ref="Step">
+              <param name="Operation" value="$O"/>
+            </run_actions>
+          </do_if>
+        </do_if>
+      </actions>
+    </cue>
+  </cues>
+</mdscript>

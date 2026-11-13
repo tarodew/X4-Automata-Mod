@@ -30,9 +30,13 @@
             <do_if value="not $S.$production_inputs?">
               <run_actions ref="Initialize"/>
             </do_if>
-            <do_all exact="$S.$projects.count" counter="$i">
+            <do_all exact="[8, $S.$projects.count].min" counter="$i">
+              <set_value name="$S.$economy_project_cursor" exact="@$S.$economy_project_cursor + 1"/>
+              <do_if value="$S.$economy_project_cursor gt $S.$projects.count">
+                <set_value name="$S.$economy_project_cursor" exact="1"/>
+              </do_if>
               <run_actions ref="Station">
-                <param name="P" value="$S.$projects.{$i}"/>
+                <param name="P" value="$S.$projects.{$S.$economy_project_cursor}"/>
               </run_actions>
             </do_all>
           </do_if>
@@ -43,16 +47,33 @@
       <params/>
       <actions>
         <set_value name="$S" exact="global.$nyto_automata"/>
-        <do_if value="not @$S.$bunker.exists or not $S.$roles?">
+        <do_if value="not @$S.$bunker.isoperational or not @$S.$founding_builder_issued or not $S.$roles?">
           <return/>
         </do_if>
-        <!-- The ceiling is 14, not a founding grant. Real queues build every missing builder. -->
+        <set_value name="$Demand" exact="0"/>
+        <do_for_each name="$Project" in="$S.$projects">
+          <do_if value="($Project.$phase == 'queued' or $Project.$phase == 'building') and not @$S.$restricted_sectors.{$Project.$sector_record.$key}">
+            <set_value name="$Demand" operation="add" exact="1"/>
+          </do_if>
+        </do_for_each>
+        <!-- Capacity is a ceiling. Existing ships and in-flight builds are retained. -->
+        <set_value name="$Demand" exact="[14, [$Demand, 1].max].min"/>
         <do_all exact="14" counter="$i">
+          <set_value name="$Key" exact="'builder:' + $i"/>
+          <do_if value="$i gt $Demand">
+            <set_value name="$Q" exact="@$S.$slot_index.{$Key}"/>
+            <do_if value="$Q">
+              <set_value name="$Q.$enabled" exact="false"/>
+            </do_if>
+            <continue/>
+          </do_if>
           <run_actions ref="md.Nyto_Automata_Procurement.EnsureSlot" result="$Q">
-            <param name="Key" value="'builder:' + $i"/>
+            <param name="Key" value="$Key"/>
             <param name="Role" value="'builder'"/>
             <param name="Home" value="$S.$bunker"/>
           </run_actions>
+          <set_value name="$Q.$home" exact="$S.$bunker"/>
+          <set_value name="$Q.$enabled" exact="true"/>
           <do_if value="$i == 1 and @$S.$founding_builder.exists and not @$S.$founding_builder.$nyto_automata_slot">
             <set_value name="$Q.$ship" exact="$S.$founding_builder"/>
             <set_value name="$Q.$phase" exact="'ready'"/>
@@ -67,29 +88,40 @@
       </params>
       <actions>
         <set_value name="$S" exact="global.$nyto_automata"/>
-        <do_if value="not @$P.$station.exists or $P.$station.owner != faction.yorha">
-          <return/>
-        </do_if>
         <set_value name="$St" exact="$P.$station"/>
-        <do_if value="$P.$kind == 'hq_extension'">
+        <do_if value="($P.$phase == 'authorized' or $P.$phase == 'creating_shell') and not @$St.exists">
           <return/>
         </do_if>
-        <!-- The empty shell has native build storage. Supply its real buy orders while the admin is still unfinished. -->
-        <do_if value="$P.$phase != 'operational' and $P.$phase != 'lost'">
-          <do_all exact="2" counter="$i">
+        <do_if value="not @$St.exists or $St.owner != faction.yorha or $P.$phase == 'lost'">
+          <run_actions ref="DisableStationSlots">
+            <param name="P" value="$P"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="@$S.$restricted_sectors.{$P.$sector_record.$key}">
+          <return/>
+        </do_if>
+        <!-- Follow the station's real build-storage demand, including in-place HQ expansion. -->
+        <do_all exact="2" counter="$i">
+          <set_value name="$BuildTradeKey" exact="$P.$key + ':construction_trade:' + $i"/>
+          <do_if value="($P.$phase == 'queued' or $P.$phase == 'building') and @$St.buildstorage.exists">
             <run_actions ref="TradeSlot">
-              <param name="Key" value="$P.$key + ':construction_trade:' + $i"/>
-              <param name="Station" value="$St.buildstorage"/>
+              <param name="Key" value="$BuildTradeKey"/>
+              <param name="Station" value="$St"/>
               <param name="Wares" value="[ware.energycells, ware.computronicsubstrate, ware.siliconcarbide]"/>
+              <param name="Construction" value="true"/>
+              <param name="Project" value="$P"/>
             </run_actions>
-          </do_all>
-        </do_if>
-        <do_if value="not $St.isoperational">
+          </do_if>
+          <do_else>
+            <run_actions ref="DisableSlot">
+              <param name="Q" value="@$S.$slot_index.{$BuildTradeKey}"/>
+              <param name="Station" value="$St"/>
+            </run_actions>
+          </do_else>
+        </do_all>
+        <do_if value="$P.$kind == 'hq_extension' or not $St.isoperational">
           <return/>
-        </do_if>
-        <do_if value="not @$P.$manager_initialized">
-          <signal_objects object="$St" param="'init station'"/>
-          <set_value name="$P.$manager_initialized" exact="true"/>
         </do_if>
         <set_value name="$Demand" exact="table[]"/>
         <do_for_each name="$Macro" in="$S.$production_inputs.keys.list">
@@ -129,13 +161,24 @@
         <set_value name="$Wares" exact="$St.resources.list"/>
         <append_list_elements name="$Wares" other="$St.products.list"/>
         <append_list_elements name="$Wares" other="$St.supplyresources.list"/>
+        <do_if value="not $Wares.count">
+          <return/>
+        </do_if>
         <do_all exact="$N" counter="$i">
           <run_actions ref="TradeSlot">
             <param name="Key" value="$P.$key + ':trade:' + $i"/>
             <param name="Station" value="$St"/>
             <param name="Wares" value="$Wares"/>
+            <param name="Project" value="$P"/>
           </run_actions>
         </do_all>
+        <do_all exact="[@$P.$trade_count - $N, 0].max" counter="$i">
+          <run_actions ref="DisableSlot">
+            <param name="Q" value="@$S.$slot_index.{$P.$key + ':trade:' + ($N + $i)}"/>
+            <param name="Station" value="$St"/>
+          </run_actions>
+        </do_all>
+        <set_value name="$P.$trade_count" exact="$N"/>
       </actions>
     </library>
     <library name="TradeSlot" purpose="run_actions">
@@ -143,6 +186,8 @@
         <param name="Key"/>
         <param name="Station"/>
         <param name="Wares"/>
+        <param name="Construction" default="false"/>
+        <param name="Project"/>
       </params>
       <actions>
         <do_if value="not $Station.exists">
@@ -154,9 +199,17 @@
           <param name="Home" value="$Station"/>
           <param name="Group" value="'economy'"/>
         </run_actions>
+        <do_if value="not $Q">
+          <return/>
+        </do_if>
+        <set_value name="$Q.$home" exact="$Station"/>
+        <set_value name="$Q.$project" exact="$Project"/>
+        <set_value name="$Q.$enabled" exact="true"/>
         <do_if value="@$Q.$ship.isoperational and not @$Q.$loan and $Q.$phase != 'recovering'">
-          <do_if value="$Q.$ship.commander != $Station">
-            <set_object_commander object="$Q.$ship" commander="$Station" assignment="assignment.trading" informfleetmanager="false"/>
+          <set_value name="$Assignment" exact="if $Construction then assignment.tradeforbuildstorage else assignment.trade"/>
+          <do_if value="$Q.$ship.commander != $Station or $Q.$ship.assignment != $Assignment">
+            <set_object_commander object="$Q.$ship" commander="$Station" assignment="$Assignment" informfleetmanager="false"/>
+            <set_value name="$Q.$assigned" exact="false"/>
           </do_if>
           <do_if value="not @$Q.$assigned or $Q.$ship.defaultorder.id != 'TradeRoutine'">
             <create_order object="$Q.$ship" id="'TradeRoutine'" default="true">
@@ -164,10 +217,52 @@
               <param name="range" value="$Station.sector"/>
               <param name="maxbuy" value="5"/>
               <param name="maxsell" value="5"/>
+              <param name="tradeforbuildstorage" value="$Construction"/>
             </create_order>
             <set_value name="$Q.$assigned" exact="true"/>
           </do_if>
         </do_if>
+      </actions>
+    </library>
+    <library name="DisableSlot" purpose="run_actions">
+      <params>
+        <param name="Q"/>
+        <param name="Station"/>
+      </params>
+      <actions>
+        <do_if value="not $Q or not $Q.$enabled">
+          <return/>
+        </do_if>
+        <set_value name="$Q.$enabled" exact="false"/>
+        <set_value name="$Q.$assigned" exact="false"/>
+        <do_if value="@$Q.$ship.exists and $Q.$ship.owner == faction.yorha and not @$Q.$loan and $Q.$phase != 'recovering'">
+          <do_if value="@$Q.$ship.commander and ($Q.$ship.commander == $Station or $Q.$ship.commander == $Q.$home or $Q.$ship.commander == @$Station.buildstorage)">
+            <remove_object_commander object="$Q.$ship"/>
+          </do_if>
+          <do_if value="@$Q.$ship.defaultorder.id == 'TradeRoutine' or @$Q.$ship.defaultorder.id == 'MiningRoutine'">
+            <create_order object="$Q.$ship" id="'Wait'" default="true"/>
+          </do_if>
+        </do_if>
+      </actions>
+    </library>
+    <library name="DisableStationSlots" purpose="run_actions">
+      <params>
+        <param name="P"/>
+      </params>
+      <actions>
+        <do_if value="@$P.$economy_closed">
+          <return/>
+        </do_if>
+        <set_value name="$P.$economy_closed" exact="true"/>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_for_each name="$Q" in="$S.$slots">
+          <do_if value="$Q.$group == 'economy' and (@$Q.$project == $P or ($Q.$home and ($Q.$home == $P.$station or $Q.$home == @$P.$station.buildstorage)))">
+            <run_actions ref="DisableSlot">
+              <param name="Q" value="$Q"/>
+              <param name="Station" value="$P.$station"/>
+            </run_actions>
+          </do_if>
+        </do_for_each>
       </actions>
     </library>
     <library name="MiningCapacity" purpose="run_actions">
@@ -210,12 +305,13 @@
         <!-- Underperformance is a request for one extra supplier per observed shortage window, never a free hull. -->
         <do_if value="player.age ge $E.$last_adapt + 20min">
           <set_value name="$E.$last_adapt" exact="player.age"/>
-          <do_if value="$E.$deliveries gt 0 and $P.$station.cargo.{$Ware}.count lt $Rate * 0.1">
+          <do_if value="$E.$deliveries gt @$E.$last_adapt_deliveries and $P.$station.cargo.{$Ware}.count lt $Rate * 0.1">
             <set_value name="$E.$shortfall" operation="add" exact="1"/>
           </do_if>
           <do_elseif value="$P.$station.cargo.{$Ware}.count gt $Rate * 2 and $E.$shortfall gt 0">
             <set_value name="$E.$shortfall" operation="subtract" exact="1"/>
           </do_elseif>
+          <set_value name="$E.$last_adapt_deliveries" exact="$E.$deliveries"/>
         </do_if>
         <set_value name="$N" exact="[$N + $E.$shortfall, 1].max"/>
         <set_value name="$E.$desired" exact="$N"/>
@@ -226,11 +322,16 @@
             <param name="Home" value="$P.$station"/>
             <param name="Group" value="'economy'"/>
           </run_actions>
+          <do_if value="not $Q">
+            <continue/>
+          </do_if>
+          <set_value name="$Q.$enabled" exact="true"/>
+          <set_value name="$Q.$project" exact="$P"/>
           <do_if value="not $E.$slots.indexof.{$Q}">
             <append_to_list name="$E.$slots" exact="$Q"/>
           </do_if>
-          <do_if value="@$Q.$ship.isoperational and not @$Q.$assigned">
-            <set_object_commander object="$Q.$ship" commander="$P.$station" assignment="assignment.trading" informfleetmanager="false"/>
+          <do_if value="@$Q.$ship.isoperational and not @$Q.$loan and $Q.$phase != 'recovering' and (not @$Q.$assigned or $Q.$ship.commander != $P.$station or @$Q.$ship.defaultorder.id != 'MiningRoutine')">
+            <set_object_commander object="$Q.$ship" commander="$P.$station" assignment="assignment.mining" informfleetmanager="false"/>
             <create_order object="$Q.$ship" id="'MiningRoutine'" default="true">
               <param name="warebasket" value="[$Ware]"/>
               <param name="range" value="$P.$sector"/>
@@ -239,6 +340,12 @@
             </create_order>
             <set_value name="$Q.$assigned" exact="true"/>
           </do_if>
+        </do_all>
+        <do_all exact="[$E.$slots.count - $N, 0].max" counter="$i">
+          <run_actions ref="DisableSlot">
+            <param name="Q" value="$E.$slots.{$N + $i}"/>
+            <param name="Station" value="$P.$station"/>
+          </run_actions>
         </do_all>
       </actions>
     </library>

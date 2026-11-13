@@ -39,8 +39,10 @@ The Operations Board is sector-first. It should show operation phase, assigned a
 | --- | --- |
 | Founding Buildout | Begin or resume the bounded founding chain. |
 | Claim Sector | Evaluate the selected sector for a claim or conquest. |
+| Sponsor Buildout | Authorize the approved non-claim station network in an explicitly selected player-owned sector. |
 | Prioritize Front | Raise priority for a selected front. |
 | Restrict Sector | Exclude a sector from ordinary operations, construction or expansion. |
+| Designate Arsenal / Front Gate | Choose the staging and service hub and its accelerator-linked support sector. |
 | Clear Directive | Clear the player directive and preserve normal faction duties. |
 | Operations Report | Show active work, blockers and outcomes. |
 

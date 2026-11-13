@@ -13,13 +13,12 @@
       "shield_ter_m_standard_01_mk3_macro",
       "shield_ter_m_standard_02_mk3_macro",
       "shield_ter_s_standard_01_mk3_macro",
-      "software_dummy_macro",
       "thruster_gen_s_allround_01_mk3_macro",
       "turret_ter_m_gatling_01_mk1_macro",
       "turret_ter_m_gatling_02_mk1_macro",
-      "weapon_gen_s_guided_02_mk1_macro",
       "weapon_ter_s_gatling_01_mk2_macro"
-    ]
+    ],
+    "missile_fit_status": "open pending current X4 9.0 dedicated launcher and hull compatibility evidence; paid ticket uses the existing Proton option"
   },
   "takoba": {
     "macro": "ship_ter_s_fighter_03_a_macro",
@@ -35,7 +34,6 @@
       "shield_ter_m_standard_01_mk3_macro",
       "shield_ter_m_standard_02_mk3_macro",
       "shield_ter_s_standard_01_mk3_macro",
-      "software_dummy_macro",
       "thruster_gen_s_allround_01_mk3_macro",
       "turret_ter_m_gatling_01_mk1_macro",
       "turret_ter_m_gatling_02_mk1_macro",
@@ -56,7 +54,6 @@
       "shield_ter_m_standard_01_mk3_macro",
       "shield_ter_m_standard_02_mk3_macro",
       "shield_ter_s_standard_01_mk3_macro",
-      "software_dummy_macro",
       "thruster_gen_s_allround_01_mk3_macro",
       "turret_ter_m_gatling_01_mk1_macro",
       "turret_ter_m_gatling_02_mk1_macro",
@@ -77,7 +74,6 @@
       "shield_ter_m_standard_01_mk3_macro",
       "shield_ter_m_standard_02_mk3_macro",
       "shield_ter_s_standard_01_mk3_macro",
-      "software_dummy_macro",
       "thruster_gen_s_allround_01_mk3_macro",
       "turret_ter_m_gatling_01_mk1_macro",
       "turret_ter_m_gatling_02_mk1_macro"
@@ -97,13 +93,12 @@
       "shield_ter_m_standard_01_mk3_macro",
       "shield_ter_m_standard_02_mk3_macro",
       "shield_ter_s_standard_01_mk3_macro",
-      "software_dummy_macro",
       "thruster_gen_m_allround_01_mk3_macro",
       "turret_ter_m_gatling_01_mk1_macro",
       "turret_ter_m_gatling_02_mk1_macro",
-      "weapon_gen_m_guided_02_mk1_macro",
       "weapon_ter_m_gatling_01_mk2_macro"
-    ]
+    ],
+    "missile_fit_status": "open pending current X4 9.0 dedicated launcher and hull compatibility evidence; paid ticket uses the existing Proton option"
   },
   "osaka": {
     "macro": "ship_ter_l_destroyer_01_a_macro",
@@ -125,7 +120,29 @@
       "turret_ter_m_gatling_02_mk1",
       "weapon_ter_l_destroyer_01_mk1"
     ],
-    "native_allowed_macros": []
+    "native_allowed_macros": [],
+    "required_turret_families": [
+      {
+        "macros": [
+          "turret_ter_l_beam_01_mk1_macro"
+        ],
+        "count": 1
+      },
+      {
+        "macros": [
+          "turret_ter_l_gatling_01_mk1_macro"
+        ],
+        "count": 2
+      },
+      {
+        "macros": [
+          "turret_ter_m_gatling_01_mk1_macro",
+          "turret_ter_m_gatling_02_mk1_macro"
+        ],
+        "count": 10
+      }
+    ],
+    "turret_fit_source": "explicit loadout mount paths; installed counts checked at delivery"
   },
   "osaka_travel": {
     "macro": "ship_ter_l_destroyer_01_a_macro",
@@ -147,7 +164,31 @@
       "turret_ter_m_gatling_02_mk1",
       "weapon_ter_l_destroyer_01_mk1"
     ],
-    "native_allowed_macros": []
+    "native_allowed_macros": [],
+    "required_turret_families": [
+      {
+        "macros": [
+          "turret_ter_l_beam_01_mk1_macro"
+        ],
+        "count": 1
+      },
+      {
+        "macros": [
+          "turret_ter_l_gatling_01_mk1_macro"
+        ],
+        "count": 2
+      },
+      {
+        "macros": [
+          "turret_ter_m_gatling_01_mk1_macro",
+          "turret_ter_m_gatling_02_mk1_macro"
+        ],
+        "count": 10
+      }
+    ],
+    "turret_fit_source": "explicit loadout mount paths; installed counts checked at delivery",
+    "required_engine_macro": "engine_ter_l_travel_01_mk1_macro",
+    "required_engine_count": 2
   },
   "syn": {
     "macro": "ship_atf_l_destroyer_01_a_macro",
@@ -169,7 +210,29 @@
       "turret_ter_m_gatling_02_mk1",
       "weapon_ter_l_destroyer_01_mk1"
     ],
-    "native_allowed_macros": []
+    "native_allowed_macros": [],
+    "required_turret_families": [
+      {
+        "macros": [
+          "turret_ter_l_beam_01_mk1_macro"
+        ],
+        "count": 4
+      },
+      {
+        "macros": [
+          "turret_ter_l_gatling_01_mk1_macro"
+        ],
+        "count": 4
+      },
+      {
+        "macros": [
+          "turret_ter_m_gatling_01_mk1_macro",
+          "turret_ter_m_gatling_02_mk1_macro"
+        ],
+        "count": 4
+      }
+    ],
+    "turret_fit_source": "explicit loadout mount paths; installed counts checked at delivery"
   },
   "asgard": {
     "macro": "ship_atf_xl_battleship_01_a_macro",
@@ -192,7 +255,29 @@
       "weapon_atf_xl_battleship_01_mk1",
       "weapon_ter_l_destroyer_01_mk1"
     ],
-    "native_allowed_macros": []
+    "native_allowed_macros": [],
+    "required_turret_families": [
+      {
+        "macros": [
+          "turret_ter_l_beam_01_mk1_macro"
+        ],
+        "count": 8
+      },
+      {
+        "macros": [
+          "turret_ter_l_gatling_01_mk1_macro"
+        ],
+        "count": 8
+      },
+      {
+        "macros": [
+          "turret_ter_m_gatling_01_mk1_macro",
+          "turret_ter_m_gatling_02_mk1_macro"
+        ],
+        "count": 6
+      }
+    ],
+    "turret_fit_source": "explicit loadout mount paths; installed counts checked at delivery"
   },
   "tokyo": {
     "macro": "ship_ter_xl_carrier_01_a_macro",
@@ -207,11 +292,20 @@
       "shield_ter_m_standard_01_mk2_macro",
       "shield_ter_m_standard_02_mk2_macro",
       "shield_ter_xl_standard_01_mk2_macro",
-      "software_dummy_macro",
       "thruster_gen_xl_allround_01_mk3_macro",
       "turret_ter_m_beam_01_mk1_macro",
       "turret_ter_m_beam_02_mk1_macro"
-    ]
+    ],
+    "required_turret_families": [
+      {
+        "macros": [
+          "turret_ter_m_beam_01_mk1_macro",
+          "turret_ter_m_beam_02_mk1_macro"
+        ],
+        "count": 28
+      }
+    ],
+    "turret_fit_source": "native restricted all-Meson generation; exact installed count checked at delivery"
   },
   "honshu": {
     "macro": "ship_ter_xl_resupplier_01_a_macro",
@@ -226,11 +320,20 @@
       "shield_ter_m_standard_01_mk2_macro",
       "shield_ter_m_standard_02_mk2_macro",
       "shield_ter_xl_standard_01_mk2_macro",
-      "software_dummy_macro",
       "thruster_gen_xl_allround_01_mk3_macro",
       "turret_ter_m_beam_01_mk1_macro",
       "turret_ter_m_beam_02_mk1_macro"
-    ]
+    ],
+    "required_turret_families": [
+      {
+        "macros": [
+          "turret_ter_m_beam_01_mk1_macro",
+          "turret_ter_m_beam_02_mk1_macro"
+        ],
+        "count": 14
+      }
+    ],
+    "turret_fit_source": "native restricted all-Meson generation; exact installed count checked at delivery"
   },
   "builder": {
     "macro": "ship_ter_xl_builder_01_a_macro",
@@ -245,7 +348,6 @@
       "shield_ter_m_standard_01_mk2_macro",
       "shield_ter_m_standard_02_mk2_macro",
       "shield_ter_xl_standard_01_mk2_macro",
-      "software_dummy_macro",
       "thruster_gen_xl_allround_01_mk3_macro",
       "turret_ter_m_gatling_01_mk1_macro",
       "turret_ter_m_gatling_02_mk1_macro"
@@ -265,7 +367,6 @@
       "shield_ter_m_standard_01_mk3_macro",
       "shield_ter_m_standard_02_mk3_macro",
       "shield_ter_s_standard_01_mk3_macro",
-      "software_dummy_macro",
       "thruster_gen_m_allround_01_mk3_macro",
       "turret_ter_l_mining_01_mk1_macro",
       "turret_ter_m_gatling_01_mk1_macro",
@@ -292,7 +393,6 @@
       "shield_ter_m_standard_01_mk3_macro",
       "shield_ter_m_standard_02_mk3_macro",
       "shield_ter_s_standard_01_mk3_macro",
-      "software_dummy_macro",
       "thruster_gen_m_allround_01_mk3_macro",
       "turret_ter_l_mining_01_mk1_macro",
       "turret_ter_m_gatling_01_mk1_macro",
@@ -318,7 +418,6 @@
       "shield_ter_m_standard_01_mk2_macro",
       "shield_ter_m_standard_02_mk2_macro",
       "shield_ter_xl_standard_01_mk2_macro",
-      "software_dummy_macro",
       "thruster_gen_l_allround_01_mk3_macro",
       "turret_ter_l_mining_01_mk1_macro",
       "turret_ter_m_gatling_01_mk1_macro",
@@ -344,7 +443,6 @@
       "shield_ter_m_standard_01_mk2_macro",
       "shield_ter_m_standard_02_mk2_macro",
       "shield_ter_xl_standard_01_mk2_macro",
-      "software_dummy_macro",
       "thruster_gen_l_allround_01_mk3_macro",
       "turret_ter_l_mining_01_mk1_macro",
       "turret_ter_m_gatling_01_mk1_macro",
@@ -371,7 +469,6 @@
       "shield_ter_m_standard_01_mk3_macro",
       "shield_ter_m_standard_02_mk3_macro",
       "shield_ter_s_standard_01_mk3_macro",
-      "software_dummy_macro",
       "thruster_gen_m_allround_01_mk3_macro",
       "turret_ter_m_gatling_01_mk1_macro",
       "turret_ter_m_gatling_02_mk1_macro"
@@ -390,7 +487,6 @@
       "shield_ter_m_standard_01_mk2_macro",
       "shield_ter_m_standard_02_mk2_macro",
       "shield_ter_xl_standard_01_mk2_macro",
-      "software_dummy_macro",
       "thruster_gen_l_allround_01_mk3_macro",
       "turret_ter_m_gatling_01_mk1_macro",
       "turret_ter_m_gatling_02_mk1_macro"

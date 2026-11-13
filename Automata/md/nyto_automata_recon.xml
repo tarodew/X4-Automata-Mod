@@ -7,7 +7,7 @@
         <set_value name="$S" exact="global.$nyto_automata"/>
         <do_all exact="$S.$clusters.count" counter="$c">
           <set_value name="$C" exact="$S.$clusters.{$c}"/>
-          <do_if value="@$C.$hq.isoperational">
+          <do_if value="@$C.$hq.isoperational and $C.$hq.owner == faction.yorha and not @$S.$restricted_sectors.{$C.$hq.sector.macro.id}">
             <do_all exact="4" counter="$i">
               <run_actions ref="md.Nyto_Automata_Procurement.EnsureSlot" result="$Q">
                 <param name="Key" value="$C.$key + ':recon:' + $i"/>
@@ -54,7 +54,7 @@
       </params>
       <actions>
         <set_value name="$S" exact="global.$nyto_automata"/>
-        <do_if value="not @$Q.$ship.isoperational">
+        <do_if value="not @$Q.$ship.isoperational or $Q.$ship.owner != faction.yorha">
           <return/>
         </do_if>
         <run_actions ref="md.Nyto_Automata_Service.Step" result="$OK">
@@ -64,8 +64,8 @@
           <return/>
         </do_if>
         <set_value name="$Ship" exact="$Q.$ship"/>
-        <find_ship name="$Contacts" space="$Ship.sector" multiple="true"/>
-        <find_station name="$Stations" space="$Ship.sector" multiple="true"/>
+        <find_ship name="$Contacts" space="$Ship.sector" multiple="true" sortbydistanceto="$Ship" sortlimit="32"/>
+        <find_station name="$Stations" space="$Ship.sector" multiple="true" sortbydistanceto="$Ship" sortlimit="16"/>
         <append_list_elements name="$Contacts" other="$Stations"/>
         <set_value name="$Danger" exact="null"/>
         <do_all exact="$Contacts.count" counter="$i">
@@ -75,14 +75,14 @@
               <param name="Observer" value="$Ship"/>
               <param name="Target" value="$T"/>
             </run_actions>
-            <do_if value="$T.mayattack.{$Ship} and $Ship.distanceto.{$T} lt 25km">
+            <do_if value="$T.mayattack.{$Ship} and $Ship.distanceto.{$T} lt 25km and (not $Danger or $Ship.distanceto.{$T} lt $Ship.distanceto.{$Danger})">
               <set_value name="$Danger" exact="$T"/>
             </do_if>
           </do_if>
         </do_all>
         <do_if value="$Danger">
           <do_if value="not @$Q.$escape.exists and player.age ge @$Q.$last_escape + 30s">
-            <create_order object="$Ship" id="'Flee'" priority="true" name="$Q.$escape">
+            <create_order object="$Ship" id="'Flee'" immediate="true" name="$Q.$escape">
               <param name="attacker" value="$Danger"/>
               <param name="holdfire" value="true"/>
               <param name="donotdrop" value="true"/>
@@ -90,6 +90,17 @@
             <set_value name="$Q.$last_escape" exact="player.age"/>
           </do_if>
           <return/>
+        </do_if>
+        <do_if value="@$Q.$recon_target and @$S.$restricted_sectors.{$Q.$recon_target.macro.id}">
+          <create_order object="$Ship" id="'MoveToObject'" default="true">
+            <param name="destination" value="$Q.$home"/>
+          </create_order>
+          <set_value name="$Q.$recon_target" exact="null"/>
+          <set_value name="$Q.$assigned" exact="false"/>
+        </do_if>
+        <do_if value="@$Q.$recon_target and $Ship.sector == $Q.$recon_target">
+          <set_value name="$Q.$visits.{$Ship.sector.macro.id}" exact="player.age"/>
+          <set_value name="$Q.$recon_target" exact="null"/>
         </do_if>
         <do_if value="not @$Q.$assigned or player.age ge @$Q.$last_recon + 10min">
           <find_sector_in_range name="$Candidates" object="$Q.$home" maxdistance="3" multiple="true"/>
@@ -101,7 +112,7 @@
           <do_all exact="$Candidates.count" counter="$i">
             <set_value name="$Sector" exact="$Candidates.{$i}"/>
             <set_value name="$Visited" exact="@$Q.$visits.{$Sector.macro.id}"/>
-            <do_if value="(not $Sector.owner or not faction.player.hasrelation.kill.{$Sector.owner}) and (not $Visited? or $Visited lt $Oldest)">
+            <do_if value="not @$S.$restricted_sectors.{$Sector.macro.id} and (not $Sector.owner or not faction.player.hasrelation.kill.{$Sector.owner}) and (not $Visited? or $Visited lt $Oldest)">
               <set_value name="$Best" exact="$Sector"/>
               <set_value name="$Oldest" exact="if $Visited? then $Visited else 0s"/>
             </do_if>
@@ -114,7 +125,7 @@
               <param name="police" value="false"/>
               <param name="deploysatellites" value="false"/>
             </create_order>
-            <set_value name="$Q.$visits.{$Best.macro.id}" exact="player.age"/>
+            <set_value name="$Q.$recon_target" exact="$Best"/>
             <set_value name="$Q.$last_recon" exact="player.age"/>
             <set_value name="$Q.$assigned" exact="true"/>
           </do_if>

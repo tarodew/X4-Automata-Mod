@@ -12,7 +12,7 @@
     </cue>
     <cue name="FirstBoot" checkinterval="2s">
       <conditions>
-        <check_value value="player.entity and md.Setup.Start.state == cuestate.complete"/>
+        <check_value value="not global.$nyto_automata? and player.entity and md.Setup.Start.state == cuestate.complete"/>
       </conditions>
       <actions>
         <run_actions ref="Initialize"/>
@@ -49,7 +49,6 @@
         </do_if>
         <set_value name="$S" exact="global.$nyto_automata"/>
         <do_if value="$S.$schema != 2">
-          <set_value name="$S.$settings.$enabled" exact="false"/>
           <write_to_logbook category="general" text="'Automata stopped: unsupported saved-state schema. No state was reset or migrated.'" title="'YoRHa Operations'"/>
           <return/>
         </do_if>
@@ -72,13 +71,14 @@
         </do_if>
         <find_station name="$Found" space="$Earth" owner="faction.yorha" godstationentry="'nyto_automata_bunker_earth'" multiple="true"/>
         <do_if value="$Found.count != 1">
+          <set_value name="$S.$bunker" exact="null"/>
           <set_value name="$S.$foundation_status" exact="if $Found.count then 'DUPLICATE_BUNKER_BLOCKED' else 'WAITING_FOR_GOD_BUNKER'"/>
           <return/>
         </do_if>
         <set_value name="$S.$bunker" exact="$Found.{1}"/>
         <set_object_name object="$S.$bunker" name="{985700,4}"/>
         <set_faction_headquarters faction="faction.yorha" station="$S.$bunker"/>
-        <set_value name="$S.$foundation_status" exact="'BUNKER_FOUND'"/>
+        <set_value name="$S.$foundation_status" exact="if @$S.$founding_builder.exists then 'FOUNDATION_READY' else if $S.$founding_builder_issued then 'FOUNDING_BUILDER_UNAVAILABLE' else 'BUNKER_FOUND'"/>
         <!-- The sole permitted free operational hull. Latch before creation. -->
         <do_if value="not $S.$founding_builder_issued and $S.$bunker.isoperational">
           <set_value name="$S.$founding_builder_issued" exact="true"/>
@@ -116,6 +116,9 @@
         <do_if value="not @global.$nyto_automata.$bunker.exists or not global.$nyto_automata.$founding_builder_issued">
           <run_actions ref="FindFoundation"/>
         </do_if>
+        <do_elseif value="global.$nyto_automata.$foundation_status == 'FOUNDATION_READY' and not @global.$nyto_automata.$founding_builder.exists">
+          <set_value name="global.$nyto_automata.$foundation_status" exact="'FOUNDING_BUILDER_UNAVAILABLE'"/>
+        </do_elseif>
         <signal_cue cue="md.Nyto_Automata_State.Pulse"/>
       </actions>
       <cues>

@@ -85,8 +85,25 @@
           <set_value name="$S.$build" exact="'V9.0.0A0.5'"/>
           <set_value name="$S.$last_security" exact="0s"/>
           <set_value name="$S.$last_recon" exact="0s"/>
-          <set_value name="$S.$settings.$security" exact="false"/>
-          <set_value name="$S.$settings.$recon" exact="false"/>
+          <do_if value="not $S.$settings.$security?">
+            <set_value name="$S.$settings.$security" exact="false"/>
+          </do_if>
+          <do_if value="not $S.$settings.$recon?">
+            <set_value name="$S.$settings.$recon" exact="false"/>
+          </do_if>
+        </do_if>
+        <do_if value="not $S.$candidate_revision?">
+          <set_value name="$S.$candidate_revision" exact="100"/>
+          <set_value name="$S.$build" exact="'V9.0.0A1.0'"/>
+          <do_if value="not $S.$operations?">
+            <set_value name="$S.$operations" exact="[]"/>
+          </do_if>
+          <do_if value="not $S.$restricted_sectors?">
+            <set_value name="$S.$restricted_sectors" exact="table[]"/>
+          </do_if>
+          <do_if value="not $S.$front_gate?">
+            <set_value name="$S.$front_gate" exact="null"/>
+          </do_if>
         </do_if>
       </actions>
     </library>
@@ -122,6 +139,15 @@
         <set_value name="$S" exact="global.$nyto_automata"/>
         <set_value name="$Best" exact="null"/>
         <set_value name="$Distance" exact="9999"/>
+        <do_if value="not $Sector">
+          <return value="null"/>
+        </do_if>
+        <do_if value="$Sector == @$S.$front_gate and @$S.$arsenal.exists">
+          <set_value name="$Arsenal" exact="@$S.$sector_index.{$S.$arsenal.macro.id}"/>
+          <do_if value="@$Arsenal.$cluster.$hq.isoperational and $Arsenal.$cluster.$hq.owner == faction.yorha">
+            <return value="$Arsenal.$cluster.$hq"/>
+          </do_if>
+        </do_if>
         <do_all exact="$S.$clusters.count" counter="$i">
           <set_value name="$C" exact="$S.$clusters.{$i}"/>
           <do_if value="@$C.$hq.isoperational and $C.$hq.owner == faction.yorha">
@@ -143,7 +169,8 @@
         <param name="Faction"/>
       </params>
       <actions>
-        <return value="$Faction != faction.player and $Faction != faction.yorha and @global.$nyto_automata.$relations.{$Faction}.$war"/>
+        <!-- Read true player diplomacy at authorization time, including between mirror ticks. -->
+        <return value="$Faction and $Faction != faction.player and $Faction != faction.yorha and $Faction != faction.ownerless and $Faction.isactive and faction.player.hasrelation.kill.{$Faction}"/>
       </actions>
     </library>
   </cues>

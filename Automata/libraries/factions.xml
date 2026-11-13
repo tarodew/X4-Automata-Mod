@@ -3,8 +3,7 @@
   <add sel="/factions">
     <faction id="yorha" name="{985700,1}" shortname="{985700,2}" description="{985700,3}" primaryrace="terran" behaviourset="default" tags="claimspace economic police privateloadout privateship standard" policefaction="yorha">
       <color ref="faction_terran"/>
-      <icon active="faction_terran" inactive="faction_terran"/>
-      <banner ref="diplomacy_banner_terran"/>
+      <icon active="faction_terran" inactive="faction_terran" banner="diplomacy_banner_terran"/>
       <licences>
         <licence type="capitalequipment" name="{20207,2591}" icon="bse_star" minrelation="0.1" precursor="ceremonyally"/>
         <licence type="capitalship" name="{20207,3291}" icon="bse_star" minrelation="0.1" precursor="ceremonyally"/>

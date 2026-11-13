@@ -7,6 +7,19 @@
         <set_value name="$S" exact="global.$nyto_automata"/>
         <do_all exact="$S.$clusters.count" counter="$c">
           <set_value name="$C" exact="$S.$clusters.{$c}"/>
+          <do_if value="$C.$reserve?">
+            <do_all exact="$C.$reserve.count" counter="$i">
+              <set_value name="$C.$reserve.{$i}.$enabled" exact="false"/>
+            </do_all>
+          </do_if>
+          <do_if value="not @$C.$hq.isoperational or $C.$hq.owner != faction.yorha">
+            <run_actions ref="SuspendFormation">
+              <param name="F" value="@$C.$regional"/>
+            </run_actions>
+            <run_actions ref="SuspendFormation">
+              <param name="F" value="@$C.$heavy"/>
+            </run_actions>
+          </do_if>
           <do_if value="@$C.$hq.isoperational and $C.$hq.owner == faction.yorha">
             <do_if value="not $C.$reserve?">
               <set_value name="$C.$reserve" exact="[]"/>
@@ -18,7 +31,9 @@
                 <param name="Home" value="$C.$hq"/>
                 <param name="Group" value="'reserve:' + $C.$key"/>
               </run_actions>
+              <set_value name="$Q.$home" exact="$C.$hq"/>
               <set_value name="$Q.$reserve" exact="true"/>
+              <set_value name="$Q.$enabled" exact="true"/>
               <do_if value="not $C.$reserve.indexof.{$Q}">
                 <append_to_list name="$C.$reserve" exact="$Q"/>
               </do_if>
@@ -29,20 +44,23 @@
               <param name="Home" value="$C.$hq"/>
               <param name="Space" value="$C.$hq.sector"/>
             </run_actions>
+            <set_value name="$C.$regional.$enabled" exact="true"/>
             <run_actions ref="md.Nyto_Automata_Fleets.Ensure" result="$C.$heavy">
               <param name="Key" value="$C.$key + ':heavy'"/>
               <param name="Type" value="'hq_defence'"/>
               <param name="Home" value="$C.$hq"/>
               <param name="Space" value="$C.$hq.sector"/>
             </run_actions>
+            <set_value name="$C.$heavy.$enabled" exact="true"/>
           </do_if>
         </do_all>
         <do_all exact="$S.$sectors.count" counter="$s">
           <set_value name="$R" exact="$S.$sectors.{$s}"/>
           <set_value name="$WasReady" exact="@$R.$security_ready"/>
           <set_value name="$R.$security_ready" exact="false"/>
+          <set_value name="$R.$security_handoff_ready" exact="false"/>
           <set_value name="$R.$security_home" exact="null"/>
-          <do_if value="$R.$sector.owner == faction.yorha or ($R.$sponsor and $R.$sector.owner == faction.player)">
+          <do_if value="$R.$sector.exists and not @$S.$restricted_sectors.{$R.$sector.macro.id} and ($R.$sector.owner == faction.yorha or ($R.$sponsor and $R.$sector.owner == faction.player))">
             <set_value name="$Home" exact="@$R.$cluster.$hq"/>
             <do_if value="not @$Home.isoperational">
               <set_value name="$Home" exact="$R.$admin"/>
@@ -52,7 +70,7 @@
                 <param name="Sector" value="$R.$sector"/>
               </run_actions>
             </do_if>
-            <do_if value="@$Home.isoperational">
+            <do_if value="@$Home.isoperational and $Home.owner == faction.yorha">
               <set_value name="$R.$security_home" exact="$Home"/>
               <do_if value="not $R.$patrols?">
                 <set_value name="$R.$patrols" exact="[]"/>
@@ -78,6 +96,11 @@
                   <param name="Home" value="$Home"/>
                   <param name="Group" value="'police:' + $R.$key"/>
                 </run_actions>
+                <do_if value="$Q.$home != $Home">
+                  <set_value name="$Q.$home" exact="$Home"/>
+                  <set_value name="$Q.$assigned" exact="false"/>
+                </do_if>
+                <set_value name="$Q.$enabled" exact="true"/>
                 <do_if value="not $R.$police.indexof.{$Q}">
                   <append_to_list name="$R.$police" exact="$Q"/>
                 </do_if>
@@ -95,12 +118,47 @@
         <do_all exact="14" counter="$i">
           <set_value name="$Q" exact="@$S.$slot_index.{'builder:' + $i}"/>
           <do_if value="@$Q.$ship.exists and $Q.$ship.owner == faction.yorha">
-            <run_actions ref="md.Nyto_Automata_Fleets.Ensure">
+            <run_actions ref="md.Nyto_Automata_Fleets.Ensure" result="$Guard">
               <param name="Key" value="'guard:builder:' + $i"/>
               <param name="Type" value="'builder_guard'"/>
               <param name="Home" value="$Q.$ship"/>
               <param name="Space" value="$Q.$ship.sector"/>
             </run_actions>
+            <set_value name="$Guard.$enabled" exact="true"/>
+          </do_if>
+          <do_else>
+            <set_value name="$Guard" exact="@$S.$fleet_index.{'guard:builder:' + $i}"/>
+            <do_if value="$Guard">
+              <run_actions ref="SuspendFormation">
+                <param name="F" value="$Guard"/>
+              </run_actions>
+            </do_if>
+          </do_else>
+        </do_all>
+      </actions>
+    </library>
+    <library name="SuspendFormation" purpose="run_actions">
+      <params>
+        <param name="F"/>
+      </params>
+      <actions>
+        <do_if value="not $F or not $F.$enabled">
+          <return/>
+        </do_if>
+        <run_actions ref="md.Nyto_Automata_Fleets.Mission">
+          <param name="F" value="$F"/>
+          <param name="Mission" value="'idle'"/>
+          <param name="Operation" value="@$F.$operation"/>
+        </run_actions>
+        <set_value name="$F.$enabled" exact="false"/>
+        <set_value name="$F.$ready" exact="0"/>
+        <do_all exact="$F.$slots.count" counter="$i">
+          <set_value name="$Q" exact="$F.$slots.{$i}"/>
+          <set_value name="$Q.$enabled" exact="false"/>
+          <set_value name="$Q.$assigned" exact="false"/>
+          <do_if value="@$Q.$relief">
+            <set_value name="$Q.$relief.$enabled" exact="false"/>
+            <set_value name="$Q.$relief.$assigned" exact="false"/>
           </do_if>
         </do_all>
       </actions>
@@ -119,9 +177,11 @@
             <run_actions ref="md.Nyto_Automata_Fleets.Mission">
               <param name="F" value="$F"/>
               <param name="Mission" value="'idle'"/>
+              <param name="Operation" value="@$F.$operation"/>
             </run_actions>
             <run_actions ref="Backfill">
               <param name="F" value="$F"/>
+              <param name="Release" value="true"/>
             </run_actions>
             <set_value name="$F.$enabled" exact="false"/>
             <do_all exact="$F.$slots.count" counter="$i">
@@ -139,6 +199,7 @@
                 </do_else>
               </do_if>
               <set_value name="$Q.$assigned" exact="false"/>
+              <set_value name="$Q.$enabled" exact="false"/>
             </do_all>
           </do_all>
         </do_if>
@@ -158,6 +219,7 @@
               </do_else>
             </do_if>
             <set_value name="$Q.$assigned" exact="false"/>
+            <set_value name="$Q.$enabled" exact="false"/>
           </do_all>
         </do_if>
       </actions>
@@ -171,7 +233,7 @@
           <do_if value="$C.$reserve?">
             <do_all exact="$C.$reserve.count" counter="$i">
               <set_value name="$Q" exact="$C.$reserve.{$i}"/>
-              <do_if value="@$Q.$ship.exists and not @$Q.$loan">
+              <do_if value="$Q.$enabled and @$Q.$ship.exists and not @$Q.$loan">
                 <run_actions ref="md.Nyto_Automata_Service.Step" result="$OK">
                   <param name="Q" value="$Q"/>
                 </run_actions>
@@ -189,7 +251,9 @@
         </do_all>
         <do_all exact="$S.$sectors.count" counter="$s">
           <set_value name="$R" exact="$S.$sectors.{$s}"/>
+          <set_value name="$R.$security_handoff_ready" exact="false"/>
           <do_if value="@$R.$security_ready">
+            <set_value name="$PoliceReady" exact="false"/>
             <do_all exact="$R.$police.count" counter="$i">
               <set_value name="$Q" exact="$R.$police.{$i}"/>
               <do_if value="@$R.$cluster.$reserve and (not @$Q.$ship.exists or $Q.$ship.hullpercentage lt 80)">
@@ -201,7 +265,8 @@
               <run_actions ref="md.Nyto_Automata_Service.Step" result="$OK">
                 <param name="Q" value="$Q"/>
               </run_actions>
-              <do_if value="$OK and not @$Q.$assigned">
+              <set_value name="$PoliceOrder" exact="if $R.$sector.policefaction == faction.yorha then 'Police' else 'Patrol'"/>
+              <do_if value="$OK and (not @$Q.$assigned or @$Q.$police_order != $PoliceOrder)">
                 <set_object_commander object="$Q.$ship" commander="$R.$security_home" assignment="assignment.defence" informfleetmanager="false"/>
                 <!-- Sponsor space is protected, but this build does not impersonate its police authority. -->
                 <do_if value="$R.$sector.policefaction == faction.yorha">
@@ -219,8 +284,19 @@
                   <set_value name="$Q.$blocker" exact="'SPONSOR_POLICING_AUTHORITY_NOT_PROVEN_SECURITY_ONLY'"/>
                 </do_else>
                 <set_value name="$Q.$assigned" exact="true"/>
+                <set_value name="$Q.$police_order" exact="$PoliceOrder"/>
+              </do_if>
+              <do_if value="not $PoliceReady and $OK and @$Q.$assigned and $Q.$ship.sector == $R.$sector and $PoliceOrder == 'Police'">
+                <run_actions ref="md.Nyto_Automata_Service.Ready" result="$PoliceReady">
+                  <param name="Q" value="$Q"/>
+                </run_actions>
               </do_if>
             </do_all>
+            <do_if value="$PoliceReady">
+              <run_actions ref="VerifyHandoff">
+                <param name="R" value="$R"/>
+              </run_actions>
+            </do_if>
             <do_all exact="$R.$patrols.count" counter="$p">
               <run_actions ref="Backfill">
                 <param name="F" value="$R.$patrols.{$p}"/>
@@ -230,15 +306,45 @@
         </do_all>
       </actions>
     </library>
+    <library name="VerifyHandoff" purpose="run_actions">
+      <params>
+        <param name="R"/>
+      </params>
+      <actions>
+        <set_value name="$Wings" exact="0"/>
+        <do_all exact="$R.$patrols.count" counter="$i">
+          <set_value name="$F" exact="$R.$patrols.{$i}"/>
+          <do_if value="$F.$mission == 'idle' and $F.$ready ge 5">
+            <set_value name="$Local" exact="0"/>
+            <do_all exact="$F.$slots.count" counter="$s">
+              <set_value name="$Q" exact="$F.$slots.{$s}"/>
+              <do_if value="@$Q.$ship.isoperational and $Q.$ship.sector == $R.$sector and $Q.$phase != 'recovering'">
+                <run_actions ref="md.Nyto_Automata_Service.Ready" result="$Ready">
+                  <param name="Q" value="$Q"/>
+                </run_actions>
+                <do_if value="$Ready">
+                  <set_value name="$Local" operation="add" exact="1"/>
+                </do_if>
+              </do_if>
+            </do_all>
+            <do_if value="$Local ge 5">
+              <set_value name="$Wings" operation="add" exact="1"/>
+            </do_if>
+          </do_if>
+        </do_all>
+        <set_value name="$R.$security_handoff_ready" exact="$Wings ge 2"/>
+      </actions>
+    </library>
     <library name="Backfill" purpose="run_actions">
       <params>
         <param name="F"/>
+        <param name="Release" default="false"/>
       </params>
       <actions>
         <do_if value="not $F.$backfill?">
           <set_value name="$F.$backfill" exact="[]"/>
         </do_if>
-        <do_if value="$F.$mission == 'idle'">
+        <do_if value="$Release or ($F.$mission == 'idle' and $F.$ready == $F.$desired)">
           <do_all exact="$F.$backfill.count" counter="$i">
             <set_value name="$Q" exact="$F.$backfill.{$i}"/>
             <set_value name="$Q.$loan" exact="null"/>
@@ -251,7 +357,7 @@
           <set_value name="$F.$backfill" exact="[]"/>
           <return/>
         </do_if>
-        <do_if value="$F.$backfill.count">
+        <do_if value="$F.$backfill.count or $F.$mission == 'idle' or $F.$mission == 'recall'">
           <return/>
         </do_if>
         <set_value name="$Available" exact="[]"/>
@@ -260,7 +366,7 @@
           <run_actions ref="md.Nyto_Automata_Service.Ready" result="$OK">
             <param name="Q" value="$Q"/>
           </run_actions>
-          <do_if value="$OK and not @$Q.$loan and $Q.$phase != 'recovering' and $Available.count lt 5">
+          <do_if value="$OK and $Q.$enabled and not @$Q.$loan and $Q.$phase != 'recovering' and $Available.count lt 5">
             <append_to_list name="$Available" exact="$Q"/>
           </do_if>
         </do_all>
@@ -350,6 +456,9 @@
           <do_if value="$Victim">
             <set_value name="$I.$victim" exact="$Victim"/>
           </do_if>
+          <do_if value="$Local">
+            <set_value name="$I.$local_attack" exact="true"/>
+          </do_if>
           <return/>
         </do_if>
         <set_value name="$I" exact="table[$key = 'incident:' + ($S.$incidents.count + 1), $target = $Target, $victim = $Victim, $sector = $Target.sector, $last_seen = player.age, $created = player.age, $phase = 'waiting_response', $fleets = [], $civilian_flee = null, $local_attack = $Local, $escalation = '', $minimum_response = 10, $last_dispatch = 0s]"/>
@@ -374,8 +483,8 @@
             <set_value name="$Alive" exact="false"/>
           </do_if>
         </do_if>
-        <do_if value="not $Alive or ($I.$target.sector != $I.$sector and $Protected)">
-          <do_if value="@$I.$victim.exists and not $Protected and $I.$victim.sector == $I.$sector">
+        <do_if value="not $Alive or $I.$target.sector != $I.$sector">
+          <do_if value="@$I.$victim.exists and not $Protected and $I.$victim.sector == $I.$sector and @$I.$civilian_flee.exists">
             <set_value name="$I.$phase" exact="'escorting_to_safe_gate'"/>
             <do_all exact="$I.$fleets.count" counter="$f">
               <run_actions ref="md.Nyto_Automata_Fleets.Mission">
@@ -409,7 +518,7 @@
         </do_if>
         <!-- Only this temporary order is ours. Never erase the civilian's ordinary/default order queue. -->
         <do_if value="@$I.$victim.exists and $I.$victim.owner == faction.player and $I.$victim != player.controlled and $I.$victim != player.occupiedship and ($I.$victim.primarypurpose == purpose.trade or $I.$victim.primarypurpose == purpose.mine) and not @$I.$flee_issued and $S.$settings.$allow_player_civilian_flee">
-          <create_order object="$I.$victim" id="'Flee'" priority="true" name="$I.$civilian_flee">
+          <create_order object="$I.$victim" id="'Flee'" immediate="true" name="$I.$civilian_flee">
             <param name="attacker" value="$I.$target"/>
             <param name="donotdrop" value="true"/>
             <param name="return" value="false"/>
@@ -422,16 +531,40 @@
         </do_if>
         <set_value name="$I.$last_dispatch" exact="player.age"/>
         <set_value name="$Capital" exact="$I.$target.isclass.[class.ship_l, class.ship_xl]"/>
+        <do_all exact="$I.$fleets.count" counter="$i" reverse="true">
+          <set_value name="$F" exact="$I.$fleets.{$i}"/>
+          <do_if value="not $F.$enabled or $F.$operation != $I.$key or not @$F.$leader.isoperational">
+            <do_if value="$F.$operation == $I.$key">
+              <run_actions ref="md.Nyto_Automata_Fleets.Mission">
+                <param name="F" value="$F"/>
+                <param name="Mission" value="'idle'"/>
+                <param name="Operation" value="$I.$key"/>
+              </run_actions>
+            </do_if>
+            <remove_value name="$I.$fleets.{$i}"/>
+          </do_if>
+        </do_all>
         <set_value name="$Needed" exact="if $Capital then 1 else 2"/>
+        <set_value name="$PatrolReady" exact="0"/>
+        <do_all exact="$I.$fleets.count" counter="$i">
+          <set_value name="$F" exact="$I.$fleets.{$i}"/>
+          <set_value name="$PatrolReady" operation="add" exact="$F.$ready"/>
+        </do_all>
+        <do_if value="not $Capital and $I.$fleets.count ge 2 and $PatrolReady lt $I.$minimum_response">
+          <set_value name="$Needed" exact="$I.$fleets.count + 1"/>
+        </do_if>
         <do_all exact="$Needed" counter="$attempt">
           <set_value name="$Best" exact="null"/>
           <set_value name="$Distance" exact="999999"/>
           <do_all exact="$S.$fleets.count" counter="$f">
             <set_value name="$F" exact="$S.$fleets.{$f}"/>
-            <set_value name="$Eligible" exact="($F.$type == 'patrol' and not $Capital and $F.$ready ge 5) or ($Capital and ($F.$type == 'regional' or $F.$type == 'rapid') and $F.$ready ge 5)"/>
-            <do_if value="$Eligible and $F.$mission == 'idle' and @$F.$leader.isoperational">
+            <set_value name="$Eligible" exact="($F.$type == 'patrol' and not $Capital and $F.$ready ge 5) or ($Capital and ($F.$type == 'regional' or $F.$type == 'hq_defence' or ($F.$type == 'rapid' and $S.$settings.$divisions)) and $F.$ready ge 5)"/>
+            <do_if value="$Eligible and $F.$enabled and $F.$mission == 'idle' and not @$F.$operation and @$F.$leader.isoperational">
               <set_value name="$D" exact="$F.$leader.gatedistance.{$I.$sector}"/>
               <do_if value="$F.$type == 'regional' and (not $R or @$R.$cluster.$regional != $F)">
+                <set_value name="$D" exact="-1"/>
+              </do_if>
+              <do_if value="$F.$type == 'hq_defence' and (not $R or @$R.$cluster.$heavy != $F)">
                 <set_value name="$D" exact="-1"/>
               </do_if>
               <do_if value="$D ge 0 and ($D le 2 or $F.$type == 'rapid') and $D lt $Distance">
@@ -441,16 +574,19 @@
             </do_if>
           </do_all>
           <do_if value="$Best and $I.$fleets.count lt $Needed">
-            <append_to_list name="$I.$fleets" exact="$Best"/>
-            <run_actions ref="md.Nyto_Automata_Fleets.Mission">
+            <run_actions ref="md.Nyto_Automata_Fleets.Mission" result="$Reserved">
               <param name="F" value="$Best"/>
               <param name="Mission" value="'incident'"/>
               <param name="Target" value="$I.$target"/>
               <param name="Operation" value="$I.$key"/>
             </run_actions>
+            <do_if value="$Reserved">
+              <append_to_list name="$I.$fleets" exact="$Best"/>
+              <set_value name="$PatrolReady" operation="add" exact="$Best.$ready"/>
+            </do_if>
           </do_if>
         </do_all>
-        <set_value name="$I.$phase" exact="if $I.$fleets.count ge $Needed then 'responding' else 'waiting_reinforcement'"/>
+        <set_value name="$I.$phase" exact="if ($Capital and $I.$fleets.count) or (not $Capital and $I.$fleets.count ge 2 and $PatrolReady ge $I.$minimum_response) then 'responding' else 'waiting_reinforcement'"/>
         <do_if value="$Capital and $I.$fleets.count == 0">
           <set_value name="$I.$escalation" exact="'REGULAR_WAR_DIVISION_REINFORCEMENT_REQUIRED'"/>
         </do_if>
@@ -468,6 +604,7 @@
             <run_actions ref="md.Nyto_Automata_Fleets.Mission">
               <param name="F" value="$F"/>
               <param name="Mission" value="'idle'"/>
+              <param name="Operation" value="$I.$key"/>
             </run_actions>
             <do_all exact="$F.$slots.count" counter="$i">
               <do_if value="@$F.$slots.{$i}.$ship.exists and $F.$slots.{$i}.$role == 'nimcha'">
@@ -517,10 +654,17 @@
           <do_if value="player.age ge @$S.$last_security + 30s">
             <set_value name="$S.$last_security" exact="player.age"/>
             <run_actions ref="ReserveAndPolice"/>
-            <do_all exact="$S.$sectors.count" counter="$i">
-              <run_actions ref="Scan">
-                <param name="R" value="$S.$sectors.{$i}"/>
-              </run_actions>
+            <do_all exact="[4, $S.$sectors.count].min" counter="$i">
+              <set_value name="$S.$security_scan_cursor" exact="@$S.$security_scan_cursor + 1"/>
+              <do_if value="$S.$security_scan_cursor gt $S.$sectors.count">
+                <set_value name="$S.$security_scan_cursor" exact="1"/>
+              </do_if>
+              <set_value name="$R" exact="$S.$sectors.{$S.$security_scan_cursor}"/>
+              <do_if value="@$R.$security_ready and $R.$sector.exists and not @$S.$restricted_sectors.{$R.$sector.macro.id}">
+                <run_actions ref="Scan">
+                  <param name="R" value="$R"/>
+                </run_actions>
+              </do_if>
             </do_all>
           </do_if>
           <do_all exact="[6,$S.$incidents.count].min" counter="$i">

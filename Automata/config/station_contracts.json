@@ -32,9 +32,24 @@
       "pier": 1,
       "equip_sm": 1
     },
+    "gateway_admin": {
+      "dock": 1,
+      "claim": 1,
+      "disc": 1,
+      "container_m": 1,
+      "tube": 1,
+      "pier": 1
+    },
     "defence": {
       "dock": 1,
       "disc": 4,
+      "tube": 2,
+      "container_m": 1
+    },
+    "gateway_defence": {
+      "dock": 1,
+      "pier": 1,
+      "disc": 6,
       "tube": 2,
       "container_m": 1
     },
@@ -111,6 +126,12 @@
     "defence",
     "defence",
     "defence"
+  ],
+  "front_gate_projects": [
+    "admin",
+    "gateway_defence",
+    "gateway_defence",
+    "gateway_defence"
   ],
   "geometry": "native asynchronous test layouts; final art deferred",
   "source": "current CAT hash-verified Terran definitions"

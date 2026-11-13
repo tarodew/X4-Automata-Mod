@@ -6,7 +6,7 @@
         <param name="Q"/>
       </params>
       <actions>
-        <do_if value="not @$Q.$ship.exists or $Q.$ship.owner != faction.yorha or not $Q.$ship.isoperational">
+        <do_if value="not @$Q.$ship.exists or $Q.$ship.owner != faction.yorha or not $Q.$ship.isoperational or ($Q.$loadout_verified? and not $Q.$loadout_verified) or (@global.$nyto_automata.$roles.{$Q.$role}.$fit? and not @$Q.$loadout_verified)">
           <return value="false"/>
         </do_if>
         <do_if value="$Q.$ship.hullpercentage lt 98">
@@ -24,7 +24,7 @@
         <param name="Preferred" default="null"/>
       </params>
       <actions>
-        <do_if value="not @$Q.$ship.exists or $Q.$ship.owner != faction.yorha">
+        <do_if value="not @$Q.$ship.exists or $Q.$ship.owner != faction.yorha or ($Q.$loadout_verified? and not $Q.$loadout_verified)">
           <return value="false"/>
         </do_if>
         <set_value name="$Ship" exact="$Q.$ship"/>
@@ -66,7 +66,7 @@
         </do_if>
         <set_value name="$Q.$last_service" exact="player.age"/>
         <!-- Native Resupply checks actual service compatibility and wares. It cannot create replacement subordinates. -->
-        <create_order object="$Ship" id="'Resupply'" name="$Q.$service" priority="true">
+        <create_order object="$Ship" id="'Resupply'" name="$Q.$service" immediate="true">
           <param name="param_station" value="$Destination"/>
           <param name="repair" value="true"/>
           <param name="hullpercent" value="100"/>
@@ -91,10 +91,14 @@
         <do_if value="$Q.$role != 'nimcha'">
           <return value="false"/>
         </do_if>
+        <!-- A ticket or an unresolved yard callback still owns this deficit. -->
+        <do_if value="@$Q.$ticket.exists or $Q.$phase == 'queued' or $Q.$phase == 'submitting' or $Q.$phase == 'requesting' or $Q.$phase == 'quarantined'">
+          <return value="false"/>
+        </do_if>
         <set_value name="$R" exact="null"/>
         <do_all exact="$Pool.count" counter="$i">
           <set_value name="$Candidate" exact="$Pool.{$i}"/>
-          <do_if value="not $R and not @$Candidate.$loan and not @$Candidate.$pending_return.exists">
+          <do_if value="not $R and $Candidate.$enabled and not @$Candidate.$loan and not @$Candidate.$pending_return.exists">
             <run_actions ref="Ready" result="$OK">
               <param name="Q" value="$Candidate"/>
             </run_actions>
@@ -108,11 +112,16 @@
         </do_if>
         <set_value name="$Old" exact="$Q.$ship"/>
         <set_value name="$Q.$ship" exact="$R.$ship"/>
+        <set_value name="$Q.$loadout_verified" exact="if $R.$loadout_verified? then $R.$loadout_verified else true"/>
         <set_value name="$Q.$phase" exact="'ready'"/>
         <set_value name="$Q.$assigned" exact="false"/>
         <set_value name="$Q.$applied_epoch" exact="-1"/>
         <set_value name="$Q.$blocker" exact="''"/>
         <set_value name="$Q.$ship.$nyto_automata_slot" exact="$Q.$key"/>
+        <do_if value="@$Q.$order.exists">
+          <cancel_order order="$Q.$order"/>
+        </do_if>
+        <set_value name="$Q.$order" exact="null"/>
         <set_value name="$R.$ship" exact="null"/>
         <set_value name="$R.$assigned" exact="false"/>
         <set_value name="$R.$phase" exact="'deficit'"/>

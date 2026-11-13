@@ -15,10 +15,16 @@
     <library name="Authorize" purpose="run_actions">
       <params>
         <param name="Sector"/>
+        <param name="FrontGate" default="false"/>
+        <param name="GatewayTo" default="null"/>
       </params>
       <actions>
         <set_value name="$S" exact="global.$nyto_automata"/>
         <do_if value="not $Sector or not $Sector.isclass.sector">
+          <return value="false"/>
+        </do_if>
+        <set_value name="$Key" exact="$Sector.macro.id"/>
+        <do_if value="@$S.$restricted_sectors.{$Key}">
           <return value="false"/>
         </do_if>
         <do_if value="$Sector.owner != faction.ownerless and $Sector.owner != faction.yorha and $Sector.owner != faction.player">
@@ -30,17 +36,32 @@
         <do_if value="$Sector.owner == faction.player and not $S.$settings.$allow_sponsor_building">
           <return value="false"/>
         </do_if>
-        <set_value name="$Key" exact="$Sector.macro.id"/>
         <do_if value="$S.$sector_index.{$Key}?">
+          <do_if value="$FrontGate and not @$S.$sector_index.{$Key}.$front_gate">
+            <return value="false"/>
+          </do_if>
           <set_value name="$S.$diagnostics.$duplicates_prevented" operation="add" exact="1"/>
           <return value="true"/>
         </do_if>
-        <set_value name="$R" exact="table[$key = $Key, $sector = $Sector, $sponsor = ($Sector.owner == faction.player), $created = player.age, $status = 'authorized', $admin = null, $cluster = null, $is_arsenal = false, $front_gate = false, $security_ready = false]"/>
+        <set_value name="$Gateway" exact="null"/>
+        <do_if value="$FrontGate">
+          <do_if value="$GatewayTo">
+            <find_gate name="$Gateway" space="$Sector" destination="$GatewayTo" active="true"/>
+          </do_if>
+          <do_else>
+            <find_gate name="$Gateway" space="$Sector" active="true"/>
+          </do_else>
+          <do_if value="not $Gateway">
+            <return value="false"/>
+          </do_if>
+        </do_if>
+        <set_value name="$R" exact="table[$key = $Key, $sector = $Sector, $sponsor = ($Sector.owner == faction.player), $created = player.age, $status = 'authorized', $admin = null, $cluster = null, $is_arsenal = false, $front_gate = $FrontGate, $gateway = $Gateway, $security_ready = false]"/>
         <set_value name="$S.$sector_index.{$Key}" exact="$R"/>
         <append_to_list name="$S.$sectors" exact="$R"/>
-        <!-- Exactly fourteen projects: central admin replaces defence #1, never station #15. -->
-        <do_all exact="$S.$project_template.count" counter="$i">
-          <set_value name="$Kind" exact="$S.$project_template.{$i}"/>
+        <!-- The central admin replaces defence #1 in both sector envelopes. -->
+        <set_value name="$Template" exact="if $FrontGate then ['admin', 'gateway_defence', 'gateway_defence', 'gateway_defence'] else $S.$project_template"/>
+        <do_all exact="$Template.count" counter="$i">
+          <set_value name="$Kind" exact="$Template.{$i}"/>
           <do_if value="$R.$sponsor and $Kind == 'admin'">
             <set_value name="$Kind" exact="'defence'"/>
           </do_if>
@@ -89,23 +110,46 @@
       </params>
       <actions>
         <set_value name="$S" exact="global.$nyto_automata"/>
-        <do_if value="$P.$phase == 'operational' or $P.$phase == 'lost' or $P.$phase == 'generation_failed'">
+        <do_if value="$P.$phase == 'lost' or $P.$phase == 'generation_failed'">
           <return/>
         </do_if>
-        <do_if value="not $P.$sector.exists">
-          <set_value name="$P.$blocker" exact="'SECTOR_LOST'"/>
+        <do_if value="$P.$phase == 'operational'">
+          <do_if value="not @$P.$station.exists or $P.$station.owner != faction.yorha">
+            <set_value name="$P.$phase" exact="'lost'"/>
+            <set_value name="$P.$blocker" exact="'OPERATIONAL_STATION_LOST'"/>
+          </do_if>
+          <do_elseif value="$P.$kind == 'admin' and $P.$sector.owner == faction.yorha and $P.$sector_record.$status == 'admin_operational_claim_pending'">
+            <set_value name="$P.$sector_record.$status" exact="'claimed'"/>
+          </do_elseif>
           <return/>
         </do_if>
-        <do_if value="$P.$sector.owner != faction.ownerless and $P.$sector.owner != faction.yorha and not ($P.$sector_record.$sponsor and $P.$sector.owner == faction.player)">
-          <set_value name="$P.$blocker" exact="'FOREIGN_OWNER_DO_NOT_CONTINUE'"/>
+        <run_actions ref="ProjectEligibility" result="$Blocker">
+          <param name="P" value="$P"/>
+        </run_actions>
+        <do_if value="$Blocker">
+          <set_value name="$P.$blocker" exact="$Blocker"/>
+          <do_if value="$Blocker != 'PLAYER_RESTRICTED_SECTOR' and @$P.$builder">
+            <run_actions ref="ReleaseBuilder">
+              <param name="P" value="$P"/>
+            </run_actions>
+          </do_if>
           <return/>
         </do_if>
-        <do_if value="$P.$kind == 'admin' and $P.$sector.owner == faction.player">
-          <set_value name="$P.$blocker" exact="'PLAYER_TERRITORY_NO_ADMIN'"/>
+        <do_if value="$P.$phase == 'sequence_ready'">
+          <run_actions ref="QueueProject">
+            <param name="P" value="$P"/>
+          </run_actions>
+          <return/>
+        </do_if>
+        <do_if value="$P.$phase == 'queue_submission'">
+          <run_actions ref="ReconcileNativeQueue">
+            <param name="P" value="$P"/>
+          </run_actions>
           <return/>
         </do_if>
         <do_if value="$P.$phase == 'authorized'">
-          <do_if value="not $S.$blueprints.{$P.$kind}?">
+          <set_value name="$Blueprint" exact="if @$P.$sector_record.$front_gate and $P.$kind == 'admin' then 'gateway_admin' else $P.$kind"/>
+          <do_if value="not $S.$blueprints.{$Blueprint}?">
             <set_value name="$P.$blocker" exact="'MISSING_BLUEPRINT'"/>
             <return/>
           </do_if>
@@ -117,8 +161,17 @@
             <!-- Latch before creating the invisible shell: a failed call cannot spawn duplicates. -->
             <set_value name="$P.$phase" exact="'creating_shell'"/>
             <set_value name="$Position" exact="$S.$project_positions.{$P.$ordinal}"/>
+            <set_value name="$Centre" exact="$P.$sector.coreposition"/>
+            <do_if value="$P.$kind == 'admin' or ($P.$sector_record.$sponsor and $P.$ordinal == 1)">
+              <set_value name="$Position" exact="table[$x = 0m, $z = 0m]"/>
+            </do_if>
+            <do_elseif value="$P.$kind == 'gateway_defence' and @$P.$sector_record.$gateway.exists">
+              <create_position name="$Centre" object="$P.$sector_record.$gateway" space="$P.$sector"/>
+              <set_value name="$GatewayOffsets" exact="[table[$x = -55km, $z = 35km], table[$x = 55km, $z = 35km], table[$x = 0km, $z = -55km]]"/>
+              <set_value name="$Position" exact="$GatewayOffsets.{$P.$ordinal - 1}"/>
+            </do_elseif>
             <create_station name="$Station" macro="macro.station_ter_tradestation_base_01_macro" sector="$P.$sector" owner="faction.yorha" rawname="'YoRHa ' + $P.$kind">
-              <safepos x="$Position.$x" y="0m" z="$Position.$z" includeplotbox="true"/>
+              <safepos x="$Centre.x + $Position.$x" y="$Centre.y" z="$Centre.z + $Position.$z" includeplotbox="true"/>
             </create_station>
             <do_if value="not $Station">
               <set_value name="$P.$phase" exact="'generation_failed'"/>
@@ -128,8 +181,10 @@
             <set_value name="$P.$station" exact="$Station"/>
           </do_if>
           <set_value name="$P.$station.$nyto_automata_project" exact="$P.$key"/>
-          <set_build_plot object="$P.$station" x="40km" y="30km" z="40km"/>
-          <set_value name="$P.$macros" exact="$S.$blueprints.{$P.$kind}"/>
+          <do_if value="not $P.$expansion">
+            <set_build_plot object="$P.$station" x="40km" y="30km" z="40km"/>
+          </do_if>
+          <set_value name="$P.$macros" exact="$S.$blueprints.{$Blueprint}"/>
           <set_value name="$P.$expected" exact="table[]"/>
           <do_all exact="$P.$macros.count" counter="$m">
             <set_value name="$Macro" exact="$P.$macros.{$m}"/>
@@ -154,9 +209,13 @@
           <return/>
         </do_if>
         <do_if value="$P.$phase == 'generating_sequence'">
-          <do_if value="player.age gt $P.$last_issue + 5min">
-            <set_value name="$P.$blocker" exact="'SEQUENCE_CALLBACK_PENDING_NO_DUPLICATE_RETRY'"/>
+          <do_if value="not @$P.$station.exists">
+            <set_value name="$P.$phase" exact="'lost'"/>
+            <set_value name="$P.$blocker" exact="'STATION_DESTROYED_DURING_SEQUENCE_GENERATION'"/>
           </do_if>
+          <do_elseif value="player.age gt $P.$last_issue + 5min">
+            <set_value name="$P.$blocker" exact="'SEQUENCE_CALLBACK_PENDING_NO_DUPLICATE_RETRY'"/>
+          </do_elseif>
           <return/>
         </do_if>
         <do_if value="not @$P.$station.exists">
@@ -179,7 +238,6 @@
             <set_value name="$P.$phase" exact="'operational'"/>
             <set_value name="$P.$blocker" exact="''"/>
             <set_value name="$P.$completed" exact="player.age"/>
-            <signal_objects object="$P.$station" param="'init station'"/>
             <run_actions ref="ReleaseBuilder">
               <param name="P" value="$P"/>
             </run_actions>
@@ -200,29 +258,46 @@
             <do_if value="@$P.$station.buildingmodule.constructionvessel == $P.$builder">
               <set_value name="$P.$phase" exact="'building'"/>
             </do_if>
-            <do_if value="player.age gt $P.$last_issue + 10min">
+            <do_elseif value="player.age gt $P.$last_issue + 10min">
               <set_value name="$P.$last_issue" exact="player.age"/>
               <do_if value="not @$P.$order.exists">
+                <run_actions ref="md.Nyto_Automata_Strategy.Route" result="$Reachable">
+                  <param name="From" value="$P.$builder"/>
+                  <param name="Sector" value="$P.$sector"/>
+                </run_actions>
+                <do_if value="not $Reachable">
+                  <run_actions ref="ReleaseBuilder">
+                    <param name="P" value="$P"/>
+                  </run_actions>
+                  <set_value name="$P.$blocker" exact="'BUILDER_ROUTE_UNSAFE'"/>
+                  <return/>
+                </do_if>
                 <create_order object="$P.$builder" id="'DeployToStation'" name="$P.$order">
                   <param name="station" value="$P.$station"/>
                   <param name="abandonbuildtime" value="6h"/>
                 </create_order>
               </do_if>
-            </do_if>
-            <set_value name="$P.$blocker" exact="'WAITING_FOR_RESOURCES_OR_NATIVE_CONSTRUCTION'"/>
+            </do_elseif>
+            <set_value name="$P.$blocker" exact="if @$P.$station.buildstorage.neededbuildresources.{$P.$build}.count then 'WAITING_FOR_NATIVE_BUILD_WARES' else (if $P.$phase == 'building' then 'NATIVE_BUILD_IN_PROGRESS' else 'BUILDER_DISPATCHED')"/>
             <return/>
           </do_if>
           <set_value name="$P.$builder" exact="null"/>
-          <find_ship name="$Builders" space="player.galaxy" owner="faction.yorha" macro="macro.ship_ter_xl_builder_01_a_macro" multiple="true"/>
+          <set_value name="$Builders" exact="$S.$builders"/>
           <set_value name="$Closest" exact="null"/>
           <set_value name="$Distance" exact="9999"/>
           <do_all exact="$Builders.count" counter="$b">
             <set_value name="$B" exact="$Builders.{$b}"/>
-            <do_if value="$B.isoperational and not @$B.$nyto_automata_project">
+            <do_if value="@$B.exists and $B.isoperational and $B.owner == faction.yorha and not $B.isdeployedconstructionvessel and not @$B.$nyto_automata_project and not $B.orders.count">
               <set_value name="$D" exact="$B.gatedistance.{$P.$sector}"/>
               <do_if value="$D ge 0 and $D lt $Distance">
-                <set_value name="$Distance" exact="$D"/>
-                <set_value name="$Closest" exact="$B"/>
+                <run_actions ref="md.Nyto_Automata_Strategy.Route" result="$Reachable">
+                  <param name="From" value="$B"/>
+                  <param name="Sector" value="$P.$sector"/>
+                </run_actions>
+                <do_if value="$Reachable">
+                  <set_value name="$Distance" exact="$D"/>
+                  <set_value name="$Closest" exact="$B"/>
+                </do_if>
               </do_if>
             </do_if>
           </do_all>
@@ -237,9 +312,58 @@
             <set_value name="$P.$blocker" exact="'BUILDER_DISPATCHED'"/>
           </do_if>
           <do_else>
-            <set_value name="$P.$blocker" exact="'WAITING_FOR_REAL_BUILDER'"/>
+            <set_value name="$P.$blocker" exact="'WAITING_FOR_REACHABLE_REAL_BUILDER'"/>
           </do_else>
         </do_if>
+      </actions>
+    </library>
+    <library name="ReconcileNativeQueue" purpose="run_actions">
+      <params>
+        <param name="P"/>
+      </params>
+      <actions>
+        <do_if value="not @$P.$station.exists or $P.$station.owner != faction.yorha">
+          <set_value name="$P.$phase" exact="'lost'"/>
+          <set_value name="$P.$blocker" exact="'STATION_UNAVAILABLE_AFTER_QUEUE_SUBMISSION'"/>
+          <return/>
+        </do_if>
+        <do_if value="not @$P.$station.buildstorage.exists">
+          <return/>
+        </do_if>
+        <set_value name="$Builds" exact="$P.$station.buildstorage.builds.queued"/>
+        <append_list_elements name="$Builds" other="$P.$station.buildstorage.builds.inprogress"/>
+        <do_for_each name="$Build" in="$Builds">
+          <do_if value="$Build.buildobject == $P.$station and $Build.constructionsequence == $P.$sequence">
+            <set_value name="$P.$build" exact="$Build"/>
+            <set_value name="$P.$phase" exact="'queued'"/>
+            <set_value name="$P.$blocker" exact="'WAITING_FOR_REAL_BUILDER'"/>
+            <return/>
+          </do_if>
+        </do_for_each>
+      </actions>
+    </library>
+    <library name="ProjectEligibility" purpose="run_actions">
+      <params>
+        <param name="P"/>
+      </params>
+      <actions>
+        <set_value name="$S" exact="global.$nyto_automata"/>
+        <do_if value="not $P.$sector.exists">
+          <return value="'SECTOR_LOST'"/>
+        </do_if>
+        <do_if value="@$S.$restricted_sectors.{$P.$sector_record.$key}">
+          <return value="'PLAYER_RESTRICTED_SECTOR'"/>
+        </do_if>
+        <do_if value="$P.$kind == 'admin' and $P.$sector.owner == faction.player">
+          <return value="'PLAYER_TERRITORY_NO_ADMIN'"/>
+        </do_if>
+        <do_if value="$P.$sector.owner != faction.ownerless and $P.$sector.owner != faction.yorha and not ($P.$sector_record.$sponsor and $P.$sector.owner == faction.player and $S.$settings.$allow_sponsor_building)">
+          <return value="'FOREIGN_OWNER_DO_NOT_CONTINUE'"/>
+        </do_if>
+        <do_if value="$P.$kind == 'solar' and $P.$sector.sunlight lt 1.0f">
+          <return value="'SOLAR_REQUIRES_100_PERCENT_SUNLIGHT'"/>
+        </do_if>
+        <return value="''"/>
       </actions>
     </library>
     <cue name="SequenceReady" instantiate="true">
@@ -289,9 +413,13 @@
       </params>
       <actions>
         <do_if value="@$P.$builder.exists and @$P.$builder.$nyto_automata_project == $P.$key">
+          <do_if value="$P.$builder.owner == faction.yorha and @$P.$order.exists and not $P.$builder.isdeployedconstructionvessel">
+            <cancel_order order="$P.$order"/>
+          </do_if>
           <set_value name="$P.$builder.$nyto_automata_project" exact="null"/>
         </do_if>
         <set_value name="$P.$builder" exact="null"/>
+        <set_value name="$P.$order" exact="null"/>
       </actions>
     </library>
     <library name="TickActions" purpose="run_actions">
@@ -340,6 +468,21 @@
           <return/>
         </do_if>
         <set_value name="$P.$sequence" exact="$EventParam"/>
+        <!-- Save the callback result even while paused, then recheck eligibility before queueing. -->
+        <set_value name="$P.$phase" exact="'sequence_ready'"/>
+        <set_value name="$P.$blocker" exact="''"/>
+      </actions>
+    </library>
+    <library name="QueueProject" purpose="run_actions">
+      <params>
+        <param name="P"/>
+      </params>
+      <actions>
+        <do_if value="not @$P.$station.exists or $P.$station.owner != faction.yorha">
+          <set_value name="$P.$phase" exact="'lost'"/>
+          <set_value name="$P.$blocker" exact="'STATION_UNAVAILABLE_AFTER_GENERATION'"/>
+          <return/>
+        </do_if>
         <generate_loadout sequence="$P.$sequence" faction="faction.terran" level="0.8" result="$Loadouts"/>
         <do_all exact="$Loadouts.count" counter="$l">
           <apply_loadout sequence="$P.$sequence" index="$l" loadout="$Loadouts.{$l}"/>
