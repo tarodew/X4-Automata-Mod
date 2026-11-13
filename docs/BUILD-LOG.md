@@ -56,3 +56,9 @@ The 1,372 checks covered XML, MD actions and attributes, native order parameters
 - Kept the persistent player-relation mirror, +30 sponsor relationship, Earth Bunker, 14-Builder ceiling, no YoRHa fabrication, and locked formation and station counts. The delivered capital-fit check measures installed turret families. Nimcha and Jian use provisional Proton loadouts while exact launcher compatibility is open.
 - Integrated the full MD XSD and bounded diff/library checks. Base schema and native order files were matched to the numbered catalogue. Available Terran library and component data serve as historical fixtures. The exact effective X4 9.0 DLC patch order and engine expressions remain unverified.
 - Exceptional Asgard deployment, additional Arsenal station planning, and final geometry remain open. Provisional thresholds cover force concentration and two physically present Nimcha wings plus police for a claim handoff. They require in-game evidence. A paid order and an assigned Builder crossing save/reload are the first persistence test.
+
+Final offline package evidence for source commit `b8bb85d63b3cfdc44b72005ec4bf995dda31dc21`:
+
+- **145 passed, 0 failed, 3 skipped.** Full Mission Director XSD passed for 15 scripts. Five authored diffs and four materialized library fixtures also passed XSD checks.
+- The skipped groups cover exact effective DLC patch order and Terran payload provenance, standalone schemas unavailable for four file types, and X4 engine behaviour.
+- Two independent ZIP builds were byte-identical. Package SHA-256 is `fbf62cb020034f27ebb073fe091c21db29640c94216eab379ce91e0a5224f470`.
