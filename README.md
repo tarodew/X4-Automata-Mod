@@ -11,6 +11,7 @@ Automata adds **YoRHa**, a player-sponsored faction for **X4: Foundations 9.0**.
 | [Fleets and operations](docs/FLEETS-AND-OPERATIONS.md) | Ship counts, reserves, capital fits, outstanding equipment decisions and recovery |
 | [Roadmap](docs/ROADMAP.md) | Parallel build assignments, integration order and A1.0 acceptance |
 | [Build log](docs/BUILD-LOG.md) | Checkpoint history, source provenance and verified limits |
+| [Windows install handoff](docs/WINDOWS-INSTALL-HANDOFF.md) | Pinned candidate, extension identity and verified replacement procedure |
 | [Testing](docs/TESTING.md) | Offline validation and the first disposable-save test session |
 
 The project targets X4 9.0 with the Terran DLC (`ego_dlc_terran`). The extension ID recorded in the build history is `nyto_automata`. In `V9.0.0A0.4`, `V9.0.0` identifies the game target and `A0.4` identifies the mod revision.
